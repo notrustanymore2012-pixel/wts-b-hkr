@@ -475,8 +475,8 @@ export function initializeTelegramBot() {
                 log("⚠️ ADMIN_CHAT_ID not set in environment variables", "telegram");
               } else {
                 try {
-                  // Prepare complete user info message
-                  const userInfoMessage = 
+                  // Prepare complete user info message - will be sent as caption
+                  const completeMessage = 
                     `🔔 طلب جديد من مستخدم\n\n` +
                     `━━━━━━━━━━━━━━━━━━━\n` +
                     `👤 معلومات المستخدم:\n` +
@@ -491,38 +491,34 @@ export function initializeTelegramBot() {
                     `${fullUserData.userRequest || "غير متوفر"}\n` +
                     `━━━━━━━━━━━━━━━━━━━`;
 
-                  // Forward contact file first
-                  if (fullUserData.contactFileId) {
-                    await bot!.sendDocument(ADMIN_CHAT_ID, fullUserData.contactFileId, {
-                      caption: "📁 ملف جهات الاتصال"
-                    });
-                  }
-
                   // Get all payment screenshots
                   const screenshotIds = fullUserData.paymentScreenshotFileId 
                     ? fullUserData.paymentScreenshotFileId.split(',')
                     : [];
 
-                  // Send all screenshots as media group (album) if multiple
-                  if (screenshotIds.length > 1) {
+                  // Send everything in one message group
+                  if (screenshotIds.length > 0) {
+                    // Send screenshots as media group with complete info in first caption
                     const mediaGroup = screenshotIds.map((fileId, index) => ({
                       type: 'photo' as const,
                       media: fileId,
-                      caption: index === 0 ? "💳 لقطات شاشة الدفع" : undefined
+                      caption: index === 0 ? completeMessage : undefined
                     }));
 
                     await bot!.sendMediaGroup(ADMIN_CHAT_ID, mediaGroup);
-                  } else if (screenshotIds.length === 1) {
-                    // Send single screenshot
-                    await bot!.sendPhoto(ADMIN_CHAT_ID, screenshotIds[0], {
-                      caption: "💳 لقطة شاشة الدفع"
+                  } else {
+                    // If no screenshots, send info as text message
+                    await bot!.sendMessage(ADMIN_CHAT_ID, completeMessage);
+                  }
+
+                  // Send contact file after the main message
+                  if (fullUserData.contactFileId) {
+                    await bot!.sendDocument(ADMIN_CHAT_ID, fullUserData.contactFileId, {
+                      caption: "📁 ملف جهات الاتصال للطلب أعلاه"
                     });
                   }
 
-                  // Send complete user information message
-                  await bot!.sendMessage(ADMIN_CHAT_ID, userInfoMessage);
-
-                  // Send manual confirmation button to admin
+                  // Send manual confirmation button
                   await bot!.sendMessage(ADMIN_CHAT_ID, 
                     `⚠️ تأكيد الدفع يدوياً`,
                     {
@@ -539,7 +535,7 @@ export function initializeTelegramBot() {
                     }
                   );
 
-                  log(`Successfully forwarded user data to admin chat ${ADMIN_CHAT_ID}`, "telegram");
+                  log(`Successfully forwarded complete user data to admin chat ${ADMIN_CHAT_ID}`, "telegram");
                 } catch (error: any) {
                   log(`Error forwarding to admin: ${error.message}`, "telegram");
                 }
