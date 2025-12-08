@@ -95,6 +95,11 @@ export class DbStorage implements IStorage {
     return user;
   }
 
+  async getUserFirstMessageId(telegramUserId: number): Promise<number | null> {
+    const user = await this.getUserByTelegramId(telegramUserId);
+    return user?.firstMessageId || null;
+  }
+
   async saveUserContactFile(telegramUserId: number, fileId: string) {
     const [user] = await db
       .update(users)
