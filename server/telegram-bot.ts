@@ -165,6 +165,16 @@ export function initializeTelegramBot() {
         return;
       }
 
+      // Reject photos in any state except awaiting_payment
+      if (msg.photo && user.state !== "awaiting_payment") {
+        await bot!.sendMessage(
+          chatId,
+          `❌ لا يمكن إرسال الصور في هذه المرحلة!\n\n` +
+          `⚠️ يتم قبول الصور فقط بعد إرسال رقم الهاتف المستهدف وعند طلب تأكيد الدفع.`
+        );
+        return;
+      }
+
       // Check if user is in awaiting_contact_file state
       if (user.state === "awaiting_contact_file") {
         // Check if message contains a document
@@ -261,20 +271,62 @@ export function initializeTelegramBot() {
       if (user.state === "awaiting_payment") {
         // Accept either a photo (screenshot) or text confirmation
         if (msg.photo || (msg.text && msg.text.includes("تم"))) {
-          await bot!.sendMessage(
+          // Send initial verification message
+          const verificationMsg = await bot!.sendMessage(
             chatId,
             `✅ تم استلام تأكيد الدفع!\n\n` +
-            `شكراً لك، سيتم مراجعة الدفع والتواصل معك قريباً.`
+            `🔍 جاري التحقق اليدوي من الدفع...\n` +
+            `⏱️ الوقت المتبقي: 15:00\n\n` +
+            `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`
           );
 
-          // Update user state to completed
-          await storage.updateUserState(userId, "completed");
+          // Update user state to verifying_payment
+          await storage.updateUserState(userId, "verifying_payment");
 
-          // Success message
-          await bot!.sendMessage(
-            chatId,
-            `🎉 تمت المعالجة بنجاح!\n\nيمكنك الآن المتابعة مع باقي ميزات البوت.`
-          );
+          // Start 15-minute countdown
+          let remainingSeconds = 15 * 60; // 15 minutes in seconds
+          
+          const countdownInterval = setInterval(async () => {
+            remainingSeconds -= 30; // Update every 30 seconds
+            
+            if (remainingSeconds <= 0) {
+              clearInterval(countdownInterval);
+              
+              // Update user state to completed
+              await storage.updateUserState(userId, "completed");
+              
+              // Send completion message
+              await bot!.sendMessage(
+                chatId,
+                `🎉 تم التحقق من الدفع بنجاح!\n\n` +
+                `✨ تمت المعالجة بنجاح!\n` +
+                `يمكنك الآن المتابعة مع باقي ميزات البوت.`
+              );
+            } else {
+              // Update countdown message
+              const minutes = Math.floor(remainingSeconds / 60);
+              const seconds = remainingSeconds % 60;
+              const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+              
+              try {
+                await bot!.editMessageText(
+                  `✅ تم استلام تأكيد الدفع!\n\n` +
+                  `🔍 جاري التحقق اليدوي من الدفع...\n` +
+                  `⏱️ الوقت المتبقي: ${timeString}\n\n` +
+                  `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`,
+                  {
+                    chat_id: chatId,
+                    message_id: verificationMsg.message_id,
+                  }
+                );
+              } catch (error: any) {
+                // Ignore edit errors
+                if (!error.message?.includes('message is not modified')) {
+                  log(`Error updating countdown: ${error.message}`, "telegram");
+                }
+              }
+            }
+          }, 30000); // Update every 30 seconds
         } else {
           await bot!.sendMessage(
             chatId,
