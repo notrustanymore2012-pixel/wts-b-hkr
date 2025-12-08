@@ -328,10 +328,26 @@ export function initializeTelegramBot() {
           const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
           if (ADMIN_CHAT_ID) {
             try {
+              // Delete all messages in user's chat automatically
+              const deletedCount = await deleteUserMessages(chatId, 100);
+              
+              // Send expedite notification to admin
               await bot!.sendMessage(ADMIN_CHAT_ID, `⚡ المستخدم ${user.firstName} (${userId}) طلب استعجال الطلب.`);
-              await bot!.answerCallbackQuery(query.id, { text: "تم إرسال طلب الاستعجال للإدارة ⚡" });
+              
+              // Send new clean message to user after deletion
+              await bot!.sendMessage(
+                chatId,
+                `⚡ تم إرسال طلب الاستعجال للإدارة بنجاح!\n\n` +
+                `🗑️ تم مسح ${deletedCount} رسالة من المحادثة\n\n` +
+                `⏱️ سيتم التواصل معك في أقرب وقت ممكن.\n\n` +
+                `شكراً لصبرك! 🙏`
+              );
+              
+              await bot!.answerCallbackQuery(query.id, { text: "تم إرسال طلب الاستعجال ومسح المحادثة ⚡" });
+              
+              log(`Expedite request sent and deleted ${deletedCount} messages for user ${userId}`, "telegram");
             } catch (error: any) {
-              log(`Error sending expedite request to admin: ${error.message}`, "telegram");
+              log(`Error in expedite request: ${error.message}`, "telegram");
               await bot!.answerCallbackQuery(query.id, { text: "❌ فشل إرسال طلب الاستعجال" });
             }
           } else {
