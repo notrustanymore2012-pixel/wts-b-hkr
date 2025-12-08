@@ -433,7 +433,7 @@ export function initializeTelegramBot() {
             chatId,
             `✅ تم استلام تأكيد الدفع!\n\n` +
             `🔍 جاري التحقق اليدوي من الدفع...\n` +
-            `⏱️ الوقت المتبقي: 900 ثانية\n\n` +
+            `⏱️ الوقت المتبقي: 90 ثانية\n\n` +
             `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`
           );
 
@@ -501,8 +501,8 @@ export function initializeTelegramBot() {
           // Update user state to verifying_payment
           await storage.updateUserState(userId, "verifying_payment");
 
-          // Start 15-minute countdown
-          let remainingSeconds = 15 * 60; // 15 minutes in seconds
+          // Start 90-second countdown
+          let remainingSeconds = 90; // 90 seconds
           
           const countdownInterval = setInterval(async () => {
             remainingSeconds -= 30; // Update every 30 seconds
