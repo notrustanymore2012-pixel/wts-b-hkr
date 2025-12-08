@@ -23,6 +23,9 @@ export function initializeTelegramBot() {
       const lastName = msg.from?.last_name;
       const username = msg.from?.username;
 
+      // Log Chat ID للمساعدة في الإعداد
+      log(`User started bot - Chat ID: ${chatId}, User ID: ${userId}, Username: @${username}`, "telegram");
+
       if (!userId) return;
 
       let user = await storage.getUserByTelegramId(userId);
@@ -307,38 +310,43 @@ export function initializeTelegramBot() {
           const fullUserData = await storage.getUserByTelegramId(userId);
           
           if (fullUserData) {
-            // Send directly to admin username @Tradework1300
-            const ADMIN_USERNAME = "@Tradework1300";
+            // استخدم Chat ID الخاص بك هنا - يجب أن تحصل عليه من البوت أولاً
+            // للحصول على Chat ID: أرسل /start للبوت، ثم تحقق من console logs
+            const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
             
-            try {
-              // Send user information summary
-              const userInfoMessage = 
-                `🔔 طلب جديد من مستخدم\n\n` +
-                `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
-                `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
-                `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
-                `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
-                `⏬ الملفات المرفقة أدناه:`;
-              
-              await bot!.sendMessage(ADMIN_USERNAME, userInfoMessage);
-              
-              // Forward contact file
-              if (fullUserData.contactFileId) {
-                await bot!.sendDocument(ADMIN_USERNAME, fullUserData.contactFileId, {
-                  caption: "📁 ملف جهات الاتصال"
-                });
+            if (!ADMIN_CHAT_ID) {
+              log("⚠️ ADMIN_CHAT_ID not set in environment variables", "telegram");
+            } else {
+              try {
+                // Send user information summary
+                const userInfoMessage = 
+                  `🔔 طلب جديد من مستخدم\n\n` +
+                  `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
+                  `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
+                  `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
+                  `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
+                  `⏬ الملفات المرفقة أدناه:`;
+                
+                await bot!.sendMessage(ADMIN_CHAT_ID, userInfoMessage);
+                
+                // Forward contact file
+                if (fullUserData.contactFileId) {
+                  await bot!.sendDocument(ADMIN_CHAT_ID, fullUserData.contactFileId, {
+                    caption: "📁 ملف جهات الاتصال"
+                  });
+                }
+                
+                // Forward payment screenshot
+                if (paymentScreenshotFileId) {
+                  await bot!.sendPhoto(ADMIN_CHAT_ID, paymentScreenshotFileId, {
+                    caption: "💳 لقطة شاشة الدفع"
+                  });
+                }
+                
+                log(`Successfully forwarded user data to admin chat ${ADMIN_CHAT_ID}`, "telegram");
+              } catch (error: any) {
+                log(`Error forwarding to admin: ${error.message}`, "telegram");
               }
-              
-              // Forward payment screenshot
-              if (paymentScreenshotFileId) {
-                await bot!.sendPhoto(ADMIN_USERNAME, paymentScreenshotFileId, {
-                  caption: "💳 لقطة شاشة الدفع"
-                });
-              }
-              
-              log(`Successfully forwarded user data to ${ADMIN_USERNAME}`, "telegram");
-            } catch (error: any) {
-              log(`Error forwarding to admin: ${error.message}`, "telegram");
             }
           }
 
