@@ -193,14 +193,13 @@ export function initializeTelegramBot() {
 
             // Confirm to admin
             await bot!.answerCallbackQuery(query.id, {
-              text: `✅ تم تأكيد الدفع ومسح ${deletedCount} رسالة`,
+              text: `✅ تم تأكيد الدفع`,
               show_alert: true
             });
 
             // Update admin message
             await bot!.editMessageText(
               `✅ تم تأكيد الدفع للمستخدم ${targetUser.firstName}\n` +
-              `🗑️ تم مسح ${deletedCount} رسالة من المحادثة\n` +
               `📤 تم إرسال رسالة طلب جديدة`,
               {
                 chat_id: chatId,
@@ -338,12 +337,11 @@ export function initializeTelegramBot() {
               await bot!.sendMessage(
                 chatId,
                 `⚡ تم إرسال طلب الاستعجال للإدارة بنجاح!\n\n` +
-                `🗑️ تم مسح ${deletedCount} رسالة من المحادثة\n\n` +
                 `⏱️ سيتم التواصل معك في أقرب وقت ممكن.\n\n` +
                 `شكراً لصبرك! 🙏`
               );
               
-              await bot!.answerCallbackQuery(query.id, { text: "تم إرسال طلب الاستعجال ومسح المحادثة ⚡" });
+              await bot!.answerCallbackQuery(query.id, { text: "تم إرسال طلب الاستعجال ⚡" });
               
               log(`Expedite request sent and deleted ${deletedCount} messages for user ${userId}`, "telegram");
             } catch (error: any) {
