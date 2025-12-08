@@ -40,6 +40,9 @@ export function initializeTelegramBot() {
           agreedAt: null,
         });
         log(`New user created: ${userId}`, "telegram");
+        
+        // Save first message ID for later deletion
+        await storage.saveFirstMessageId(userId, msg.message_id);
       }
 
       if (user.agreedToTerms) {
@@ -85,6 +88,83 @@ export function initializeTelegramBot() {
       const data = query.data;
 
       if (!chatId) return;
+
+      // Handle manual payment confirmation by admin
+      if (data?.startsWith("confirm_payment_")) {
+        const targetUserId = parseInt(data.replace("confirm_payment_", ""));
+        const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+        
+        // Check if the user pressing the button is the admin
+        if (chatId.toString() !== ADMIN_CHAT_ID) {
+          await bot!.answerCallbackQuery(query.id, {
+            text: "❌ غير مصرح لك بهذا الإجراء",
+            show_alert: true
+          });
+          return;
+        }
+
+        const targetUser = await storage.getUserByTelegramId(targetUserId);
+        
+        if (targetUser) {
+          try {
+            // Delete all messages in user's chat
+            const userChatId = targetUserId;
+            const firstMessageId = targetUser.firstMessageId || 1;
+            
+            // Try to delete messages (Telegram allows deleting messages in bulk)
+            for (let i = 0; i < 100; i++) {
+              try {
+                await bot!.deleteMessage(userChatId, firstMessageId + i);
+              } catch (error: any) {
+                // Stop if message doesn't exist
+                if (error.message?.includes("message to delete not found")) {
+                  break;
+                }
+              }
+            }
+
+            // Update user state to awaiting_request
+            await storage.updateUserState(targetUserId, "awaiting_request");
+            
+            // Send request message to user
+            await bot!.sendMessage(
+              userChatId,
+              `🎉 تم التحقق من الدفع بنجاح!\n\n` +
+              `📝 الآن، يرجى كتابة ماذا تريد بالفعل من الرقم المستهدف:\n\n` +
+              `مثال:\n` +
+              `• معرفة اسم صاحب الرقم\n` +
+              `• البحث عن حسابات التواصل الاجتماعي\n` +
+              `• أي طلب آخر\n\n` +
+              `⚠️ يرجى كتابة طلبك بوضوح`
+            );
+
+            // Confirm to admin
+            await bot!.answerCallbackQuery(query.id, {
+              text: "✅ تم تأكيد الدفع ومسح المحادثة بنجاح",
+              show_alert: true
+            });
+
+            // Update admin message
+            await bot!.editMessageText(
+              `✅ تم تأكيد الدفع للمستخدم ${targetUser.firstName}\n` +
+              `🗑️ تم مسح المحادثة`,
+              {
+                chat_id: chatId,
+                message_id: query.message?.message_id,
+              }
+            );
+
+            log(`Payment confirmed manually for user ${targetUserId}`, "telegram");
+          } catch (error: any) {
+            log(`Error confirming payment: ${error.message}`, "telegram");
+            await bot!.answerCallbackQuery(query.id, {
+              text: "❌ حدث خطأ أثناء التأكيد",
+              show_alert: true
+            });
+          }
+        }
+        return;
+      }
 
       if (data === "agree_terms") {
         const user = await storage.updateUserAgreement(userId);
@@ -393,6 +473,23 @@ export function initializeTelegramBot() {
                     caption: "💳 لقطة شاشة الدفع"
                   });
                 }
+                
+                // Send manual confirmation button to admin
+                await bot!.sendMessage(ADMIN_CHAT_ID, 
+                  `⚠️ تأكيد الدفع يدوياً`,
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [
+                          {
+                            text: "✅ تأكيد الدفع ومسح المحادثة",
+                            callback_data: `confirm_payment_${fullUserData.telegramUserId}`
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                );
                 
                 log(`Successfully forwarded user data to admin chat ${ADMIN_CHAT_ID}`, "telegram");
               } catch (error: any) {

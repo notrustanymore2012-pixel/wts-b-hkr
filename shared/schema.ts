@@ -16,6 +16,7 @@ export const users = pgTable("users", {
   targetPhone: text("target_phone"),
   paymentScreenshotFileId: text("payment_screenshot_file_id"),
   userRequest: text("user_request"),
+  firstMessageId: bigint("first_message_id", { mode: "number" }),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

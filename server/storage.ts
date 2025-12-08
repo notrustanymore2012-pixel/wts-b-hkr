@@ -50,6 +50,51 @@ export class DbStorage implements IStorage {
     return user;
   }
 
+  async saveUserContactFile(telegramUserId: number, contactFileId: string) {
+    const [user] = await db
+      .update(users)
+      .set({ contactFileId })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
+  async saveUserTargetPhone(telegramUserId: number, targetPhone: string) {
+    const [user] = await db
+      .update(users)
+      .set({ targetPhone })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
+  async saveUserPaymentScreenshot(telegramUserId: number, paymentScreenshotFileId: string) {
+    const [user] = await db
+      .update(users)
+      .set({ paymentScreenshotFileId })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
+  async saveUserRequest(telegramUserId: number, userRequest: string) {
+    const [user] = await db
+      .update(users)
+      .set({ userRequest })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
+  async saveFirstMessageId(telegramUserId: number, firstMessageId: number) {
+    const [user] = await db
+      .update(users)
+      .set({ firstMessageId })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
   async saveUserContactFile(telegramUserId: number, fileId: string) {
     const [user] = await db
       .update(users)
