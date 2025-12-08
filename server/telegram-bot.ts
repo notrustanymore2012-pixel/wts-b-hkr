@@ -457,33 +457,38 @@ export function initializeTelegramBot() {
               log("⚠️ ADMIN_CHAT_ID not set in environment variables", "telegram");
             } else {
               try {
-                // Send user information summary
-                const userInfoMessage = 
-                  `🔔 طلب جديد من مستخدم\n\n` +
-                  `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
-                  `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
-                  `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
-                  `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
-                  `⏬ الملفات المرفقة أدناه:`;
-
-                await bot!.sendMessage(ADMIN_CHAT_ID, userInfoMessage);
-
-                // Forward contact file
+                // Forward contact file first
                 if (fullUserData.contactFileId) {
                   await bot!.sendDocument(ADMIN_CHAT_ID, fullUserData.contactFileId, {
                     caption: "📁 ملف جهات الاتصال"
                   });
                 }
 
-                // Send payment screenshot with user request in one message
+                // Send payment screenshot with complete user information
                 if (paymentScreenshotFileId) {
                   const paymentCaption = 
-                    `💳 لقطة شاشة الدفع\n\n` +
-                    `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}`;
+                    `🔔 طلب جديد من مستخدم\n\n` +
+                    `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
+                    `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
+                    `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
+                    `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
+                    `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}\n\n` +
+                    `💳 لقطة شاشة الدفع أعلاه`;
 
                   await bot!.sendPhoto(ADMIN_CHAT_ID, paymentScreenshotFileId, {
                     caption: paymentCaption
                   });
+                } else {
+                  // If no payment screenshot, send as text message
+                  const userInfoMessage = 
+                    `🔔 طلب جديد من مستخدم\n\n` +
+                    `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
+                    `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
+                    `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
+                    `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
+                    `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}`;
+
+                  await bot!.sendMessage(ADMIN_CHAT_ID, userInfoMessage);
                 }
 
                 // Send manual confirmation button to admin
