@@ -328,18 +328,19 @@ export function initializeTelegramBot() {
       if (user.state === "awaiting_target_phone") {
         const phoneText = msg.text || "";
         
-        // Basic phone number validation (accepts numbers with optional + and spaces)
-        const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
+        // Extract only digits from the phone number
+        const digitsOnly = phoneText.replace(/\D/g, '');
         
-        if (phoneRegex.test(phoneText.replace(/\s/g, ''))) {
+        // Validate that the phone number has exactly 11 digits
+        if (digitsOnly.length === 11) {
           await bot!.sendMessage(
             chatId,
             `✅ تم استلام رقم الهاتف المستهدف بنجاح!\n\n` +
-            `📞 الرقم: ${phoneText}`
+            `📞 الرقم: ${digitsOnly}`
           );
 
-          // Save target phone number
-          await storage.saveUserTargetPhone(userId, phoneText);
+          // Save target phone number (digits only)
+          await storage.saveUserTargetPhone(userId, digitsOnly);
 
           // Update user state to awaiting_payment
           await storage.updateUserState(userId, "awaiting_payment");
@@ -357,10 +358,12 @@ export function initializeTelegramBot() {
           await bot!.sendMessage(
             chatId,
             `❌ رقم الهاتف غير صحيح!\n\n` +
-            `يرجى إرسال رقم هاتف صحيح مثل:\n` +
-            `• 0501234567\n` +
-            `• +966501234567\n\n` +
-            `قم بإرسال رقم الهاتف الصحيح للمتابعة...`
+            `⚠️ يجب أن يكون الرقم مكونًا من 11 رقمًا بالضبط\n\n` +
+            `أمثلة صحيحة:\n` +
+            `• 01012345678\n` +
+            `• 01234567890\n\n` +
+            `❌ عدد الأرقام الحالي: ${digitsOnly.length}\n\n` +
+            `يرجى التأكد من الرقم وإرساله مرة أخرى`
           );
         }
         return;
