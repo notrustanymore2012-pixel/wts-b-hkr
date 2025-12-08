@@ -475,10 +475,14 @@ export function initializeTelegramBot() {
                   });
                 }
 
-                // Forward payment screenshot
+                // Send payment screenshot with user request in one message
                 if (paymentScreenshotFileId) {
+                  const paymentCaption = 
+                    `💳 لقطة شاشة الدفع\n\n` +
+                    `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}`;
+
                   await bot!.sendPhoto(ADMIN_CHAT_ID, paymentScreenshotFileId, {
-                    caption: "💳 لقطة شاشة الدفع"
+                    caption: paymentCaption
                   });
                 }
 
