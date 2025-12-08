@@ -7,6 +7,11 @@ let bot: TelegramBot | null = null;
 // Helper function to delete bot messages only
 async function deleteUserMessages(chatId: number, limit: number): Promise<number> {
   let deletedCount = 0;
+  if (!bot) {
+    log(`Bot not initialized, cannot delete messages`, "telegram");
+    return deletedCount;
+  }
+  
   try {
     const firstMessageId = await storage.getUserFirstMessageId(chatId);
 
@@ -14,7 +19,7 @@ async function deleteUserMessages(chatId: number, limit: number): Promise<number
       // Delete messages starting from firstMessageId
       for (let i = 0; i < limit; i++) {
         try {
-          await bot!.deleteMessage(chatId, firstMessageId + i);
+          await bot.deleteMessage(chatId, firstMessageId + i);
           deletedCount++;
         } catch (error: any) {
           // If message doesn't exist or can't be deleted, continue to next
