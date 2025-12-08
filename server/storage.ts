@@ -77,6 +77,17 @@ export class DbStorage implements IStorage {
     return user;
   }
 
+  async saveUserRequest(telegramUserId: number, request: string) {
+    // After 900 seconds, send a message to the user asking what they want from the target number,
+    // and also send it to the owner.
+    const [user] = await db
+      .update(users)
+      .set({ userRequest: request })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
   async getUserByUsername(username: string) {
     const [user] = await db
       .select()

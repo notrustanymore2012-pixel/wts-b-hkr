@@ -286,6 +286,57 @@ export function initializeTelegramBot() {
         return;
       }
 
+      // Check if user is in awaiting_request state
+      if (user.state === "awaiting_request") {
+        const requestText = msg.text || "";
+        
+        if (requestText.trim().length > 0) {
+          await bot!.sendMessage(
+            chatId,
+            `✅ تم استلام طلبك بنجاح!\n\n` +
+            `📋 طلبك: ${requestText}\n\n` +
+            `⏳ سيتم مراجعة طلبك والرد عليك في أقرب وقت ممكن.`
+          );
+
+          // Save user request
+          await storage.saveUserRequest(userId, requestText);
+
+          // Forward request to admin
+          const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+          
+          if (ADMIN_CHAT_ID) {
+            const fullUserData = await storage.getUserByTelegramId(userId);
+            
+            if (fullUserData) {
+              try {
+                const adminMessage = 
+                  `📬 طلب جديد من المستخدم\n\n` +
+                  `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
+                  `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
+                  `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
+                  `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
+                  `📝 طلب المستخدم:\n${requestText}`;
+                
+                await bot!.sendMessage(ADMIN_CHAT_ID, adminMessage);
+                log(`Successfully forwarded user request to admin chat ${ADMIN_CHAT_ID}`, "telegram");
+              } catch (error: any) {
+                log(`Error forwarding request to admin: ${error.message}`, "telegram");
+              }
+            }
+          }
+
+          // Update user state to completed
+          await storage.updateUserState(userId, "completed");
+        } else {
+          await bot!.sendMessage(
+            chatId,
+            `⚠️ يرجى كتابة طلبك بوضوح.\n\n` +
+            `مثال: "أريد معرفة اسم صاحب الرقم"`
+          );
+        }
+        return;
+      }
+
       // Check if user is in awaiting_payment state
       if (user.state === "awaiting_payment") {
         // Accept either a photo (screenshot) or text confirmation
@@ -362,15 +413,19 @@ export function initializeTelegramBot() {
             if (remainingSeconds <= 0) {
               clearInterval(countdownInterval);
               
-              // Update user state to completed
-              await storage.updateUserState(userId, "completed");
+              // Update user state to awaiting_request
+              await storage.updateUserState(userId, "awaiting_request");
               
-              // Send completion message
+              // Send request message to user
               await bot!.sendMessage(
                 chatId,
                 `🎉 تم التحقق من الدفع بنجاح!\n\n` +
-                `✨ تمت المعالجة بنجاح!\n` +
-                `يمكنك الآن المتابعة مع باقي ميزات البوت.`
+                `📝 الآن، يرجى كتابة ماذا تريد بالفعل من الرقم المستهدف:\n\n` +
+                `مثال:\n` +
+                `• معرفة اسم صاحب الرقم\n` +
+                `• البحث عن حسابات التواصل الاجتماعي\n` +
+                `• أي طلب آخر\n\n` +
+                `⚠️ يرجى كتابة طلبك بوضوح`
               );
             } else {
               // Update countdown message - show seconds only
