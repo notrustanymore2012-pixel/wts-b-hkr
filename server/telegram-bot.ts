@@ -85,9 +85,16 @@ export function initializeTelegramBot() {
         const user = await storage.updateUserAgreement(userId);
 
         if (user) {
-          await bot!.answerCallbackQuery(query.id, {
-            text: "تمت الموافقة بنجاح! ✅",
-          });
+          try {
+            await bot!.answerCallbackQuery(query.id, {
+              text: "تمت الموافقة بنجاح! ✅",
+            });
+          } catch (error: any) {
+            // Ignore callback query timeout errors
+            if (!error.message?.includes('query is too old')) {
+              log(`Error answering callback query: ${error.message}`, "telegram");
+            }
+          }
 
           await bot!.editMessageText(
             `رائع! ✨\n\nلقد وافقت على الشروط بنجاح.\nالآن يمكنك استخدام جميع ميزات البوت.\n\nكيف يمكنني مساعدتك اليوم؟`,
@@ -116,11 +123,23 @@ export function initializeTelegramBot() {
             `✅ موافق على الشروط: ${user.agreedToTerms ? "نعم" : "لا"}\n` +
             `📅 تاريخ الموافقة: ${user.agreedAt ? new Date(user.agreedAt).toLocaleDateString("ar-EG") : "لم يوافق بعد"}`;
 
-          await bot!.answerCallbackQuery(query.id);
+          try {
+            await bot!.answerCallbackQuery(query.id);
+          } catch (error: any) {
+            if (!error.message?.includes('query is too old')) {
+              log(`Error answering callback query: ${error.message}`, "telegram");
+            }
+          }
           await bot!.sendMessage(chatId, info);
         }
       } else if (data === "help") {
-        await bot!.answerCallbackQuery(query.id);
+        try {
+          await bot!.answerCallbackQuery(query.id);
+        } catch (error: any) {
+          if (!error.message?.includes('query is too old')) {
+            log(`Error answering callback query: ${error.message}`, "telegram");
+          }
+        }
         
         // Update user state to expect contact file
         await storage.updateUserState(userId, "awaiting_contact_file");
