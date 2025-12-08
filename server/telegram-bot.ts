@@ -47,7 +47,6 @@ export function initializeTelegramBot() {
             reply_markup: {
               inline_keyboard: [
                 [
-                  { text: "📋 عرض معلوماتي", callback_data: "show_info" },
                   { text: "ℹ️ مساعدة", callback_data: "help" },
                 ],
               ],
@@ -101,13 +100,6 @@ export function initializeTelegramBot() {
             {
               chat_id: chatId,
               message_id: query.message?.message_id,
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    { text: "ℹ️ مساعدة", callback_data: "help" },
-                  ],
-                ],
-              },
             }
           );
         }
@@ -281,16 +273,7 @@ export function initializeTelegramBot() {
           // Success message
           await bot!.sendMessage(
             chatId,
-            `🎉 تمت المعالجة بنجاح!\n\nيمكنك الآن المتابعة مع باقي ميزات البوت.`,
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    { text: "📋 عرض معلوماتي", callback_data: "show_info" },
-                  ],
-                ],
-              },
-            }
+            `🎉 تمت المعالجة بنجاح!\n\nيمكنك الآن المتابعة مع باقي ميزات البوت.`
           );
         } else {
           await bot!.sendMessage(
