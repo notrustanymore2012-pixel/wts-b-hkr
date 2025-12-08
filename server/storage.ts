@@ -86,6 +86,15 @@ export class DbStorage implements IStorage {
     return user;
   }
 
+  async saveUserPhoneNumber(telegramUserId: number, phoneNumber: string) {
+    const [user] = await db
+      .update(users)
+      .set({ phoneNumber })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
   async saveFirstMessageId(telegramUserId: number, firstMessageId: number) {
     const [user] = await db
       .update(users)

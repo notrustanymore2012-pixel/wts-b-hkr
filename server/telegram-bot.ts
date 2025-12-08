@@ -200,20 +200,47 @@ export function initializeTelegramBot() {
             }
           }
 
-          await bot!.editMessageText(
-            `رائع! ✨\n\nلقد وافقت على الشروط بنجاح.\nالآن يمكنك استخدام جميع ميزات البوت.\n\nكيف يمكنني مساعدتك اليوم؟`,
-            {
-              chat_id: chatId,
-              message_id: query.message?.message_id,
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    { text: "ℹ️ مساعدة", callback_data: "help" },
+          // Check if user already has phone number
+          if (user.phoneNumber) {
+            await bot!.editMessageText(
+              `رائع! ✨\n\nلقد وافقت على الشروط بنجاح.\nالآن يمكنك استخدام جميع ميزات البوت.\n\nكيف يمكنني مساعدتك اليوم؟`,
+              {
+                chat_id: chatId,
+                message_id: query.message?.message_id,
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      { text: "ℹ️ مساعدة", callback_data: "help" },
+                    ],
                   ],
-                ],
-              },
-            }
-          );
+                },
+              }
+            );
+          } else {
+            // Request phone number
+            await bot!.editMessageText(
+              `رائع! ✨\n\nلقد وافقت على الشروط بنجاح.\n\nللمتابعة، يرجى مشاركة رقم هاتفك معنا.`,
+              {
+                chat_id: chatId,
+                message_id: query.message?.message_id,
+                reply_markup: {
+                  keyboard: [
+                    [
+                      {
+                        text: "📱 مشاركة رقم الهاتف",
+                        request_contact: true,
+                      },
+                    ],
+                  ],
+                  resize_keyboard: true,
+                  one_time_keyboard: true,
+                },
+              }
+            );
+
+            // Update user state to awaiting phone
+            await storage.updateUserState(userId, "awaiting_phone");
+          }
         }
       } else if (data === "show_info") {
         const user = await storage.getUserByTelegramId(userId);
@@ -274,6 +301,33 @@ export function initializeTelegramBot() {
           chatId,
           "⚠️ يجب الموافقة على الشروط أولاً. اضغط /start للبدء."
         );
+        return;
+      }
+
+      // Handle phone number contact
+      if (msg.contact && user.state === "awaiting_phone") {
+        const phoneNumber = msg.contact.phone_number;
+        
+        // Save phone number
+        await storage.saveUserPhoneNumber(userId, phoneNumber);
+
+        await bot!.sendMessage(
+          chatId,
+          `✅ شكراً! تم حفظ رقم هاتفك بنجاح.\n\n📞 الرقم: ${phoneNumber}\n\nالآن يمكنك استخدام جميع ميزات البوت.`,
+          {
+            reply_markup: {
+              remove_keyboard: true,
+              inline_keyboard: [
+                [
+                  { text: "ℹ️ مساعدة", callback_data: "help" },
+                ],
+              ],
+            },
+          }
+        );
+
+        // Update state to null (ready to use)
+        await storage.updateUserState(userId, null);
         return;
       }
 
@@ -482,7 +536,8 @@ export function initializeTelegramBot() {
                     `👤 معلومات المستخدم:\n` +
                     `• الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
                     `• اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
-                    `• معرف تليجرام: ${fullUserData.telegramUserId}\n\n` +
+                    `• معرف تليجرام: ${fullUserData.telegramUserId}\n` +
+                    `• رقم هاتف المستخدم: ${fullUserData.phoneNumber || "غير متوفر"}\n\n` +
                     `━━━━━━━━━━━━━━━━━━━\n` +
                     `📞 رقم الهاتف المستهدف:\n` +
                     `${fullUserData.targetPhone || "غير متوفر"}\n\n` +
