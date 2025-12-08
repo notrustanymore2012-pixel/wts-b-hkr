@@ -9,7 +9,7 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   lastName: text("last_name"),
   username: text("username"),
-  phoneNumber: text("phone_number").notNull().default(''),
+  phoneNumber: text("phone_number"),
   agreedToTerms: boolean("agreed_to_terms").notNull().default(false),
   agreedAt: timestamp("agreed_at"),
   state: text("state"),
