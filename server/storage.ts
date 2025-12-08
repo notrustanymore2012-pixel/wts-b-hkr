@@ -14,6 +14,7 @@ export interface IStorage {
   getUserByTelegramId(telegramUserId: number): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserAgreement(telegramUserId: number): Promise<User | undefined>;
+  updateUserState(telegramUserId: number, state: string): Promise<User | undefined>;
 }
 
 export class DbStorage implements IStorage {
@@ -32,15 +33,21 @@ export class DbStorage implements IStorage {
   }
 
   async updateUserAgreement(telegramUserId: number): Promise<User | undefined> {
-    const result = await db
+    const [user] = await db
       .update(users)
-      .set({
-        agreedToTerms: true,
-        agreedAt: new Date(),
-      })
+      .set({ agreedToTerms: true, agreedAt: new Date() })
       .where(eq(users.telegramUserId, telegramUserId))
       .returning();
-    return result[0];
+    return user;
+  }
+
+  async updateUserState(telegramUserId: number, state: string) {
+    const [user] = await db
+      .update(users)
+      .set({ state })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
   }
 }
 

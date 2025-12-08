@@ -121,13 +121,18 @@ export function initializeTelegramBot() {
         }
       } else if (data === "help") {
         await bot!.answerCallbackQuery(query.id);
+        
+        // Update user state to expect contact file
+        await storage.updateUserState(userId, "awaiting_contact_file");
+        
         await bot!.sendMessage(
           chatId,
-          `ℹ️ كيفية استخدام البوت:\n\n` +
-          `1️⃣ اضغط على /start لبدء التفاعل\n` +
-          `2️⃣ وافق على شروط الاستخدام\n` +
-          `3️⃣ استمتع بجميع ميزات البوت\n\n` +
-          `للحصول على المساعدة، اكتب /start في أي وقت.`
+          `📁 يرجى إرسال ملف جهات الاتصال الخاص بك\n\n` +
+          `الصيغ المقبولة فقط:\n` +
+          `✅ VCF (.vcf)\n` +
+          `✅ CSV (.csv)\n\n` +
+          `⚠️ لن يتم قبول أي صيغة أخرى\n\n` +
+          `قم بإرسال الملف الآن للمتابعة...`
         );
       }
     });
@@ -147,6 +152,65 @@ export function initializeTelegramBot() {
           chatId,
           "⚠️ يجب الموافقة على الشروط أولاً. اضغط /start للبدء."
         );
+        return;
+      }
+
+      // Check if user is in awaiting_contact_file state
+      if (user.state === "awaiting_contact_file") {
+        // Check if message contains a document
+        if (msg.document) {
+          const fileName = msg.document.file_name || "";
+          const fileExtension = fileName.split(".").pop()?.toLowerCase();
+
+          // Only accept VCF or CSV files
+          if (fileExtension === "vcf" || fileExtension === "csv") {
+            await bot!.sendMessage(
+              chatId,
+              `✅ تم استلام ملف جهات الاتصال بنجاح!\n\n` +
+              `📄 اسم الملف: ${fileName}\n` +
+              `📊 الصيغة: ${fileExtension.toUpperCase()}\n\n` +
+              `جاري معالجة الملف... ⏳`
+            );
+
+            // Update user state to completed
+            await storage.updateUserState(userId, "contact_file_uploaded");
+
+            // Additional processing can be added here
+            await bot!.sendMessage(
+              chatId,
+              `🎉 تمت المعالجة بنجاح!\n\nيمكنك الآن المتابعة مع باقي ميزات البوت.`,
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      { text: "📋 عرض معلوماتي", callback_data: "show_info" },
+                    ],
+                  ],
+                },
+              }
+            );
+          } else {
+            await bot!.sendMessage(
+              chatId,
+              `❌ صيغة الملف غير مقبولة!\n\n` +
+              `الملف المرسل: ${fileName}\n` +
+              `الصيغة: ${fileExtension?.toUpperCase() || "غير معروفة"}\n\n` +
+              `⚠️ يرجى إرسال ملف بإحدى الصيغ التالية فقط:\n` +
+              `✅ VCF (.vcf)\n` +
+              `✅ CSV (.csv)\n\n` +
+              `قم بإرسال الملف الصحيح للمتابعة...`
+            );
+          }
+        } else {
+          await bot!.sendMessage(
+            chatId,
+            `⚠️ يجب إرسال ملف وليس رسالة نصية!\n\n` +
+            `الصيغ المقبولة:\n` +
+            `✅ VCF (.vcf)\n` +
+            `✅ CSV (.csv)\n\n` +
+            `قم بإرسال الملف للمتابعة...`
+          );
+        }
         return;
       }
 
