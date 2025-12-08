@@ -60,6 +60,19 @@ export function initializeTelegramBot() {
 
       let user = await storage.getUserByTelegramId(userId);
 
+      // محاولة الحصول على معلومات المستخدم الكاملة من تليجرام
+      let autoPhoneNumber: string | null = null;
+      try {
+        const chatMember = await bot!.getChatMember(chatId, userId);
+        // التحقق من وجود رقم هاتف في معلومات المستخدم
+        if (chatMember.user && 'phone_number' in chatMember.user) {
+          autoPhoneNumber = (chatMember.user as any).phone_number;
+          log(`Auto-extracted phone number for user ${userId}: ${autoPhoneNumber}`, "telegram");
+        }
+      } catch (error: any) {
+        log(`Could not auto-extract phone number: ${error.message}`, "telegram");
+      }
+
       if (!user) {
         user = await storage.createUser({
           telegramUserId: userId,
@@ -71,9 +84,19 @@ export function initializeTelegramBot() {
         });
         log(`New user created: ${userId}`, "telegram");
 
+        // حفظ رقم الهاتف تلقائيًا إذا كان متاحًا
+        if (autoPhoneNumber) {
+          await storage.saveUserPhoneNumber(userId, autoPhoneNumber);
+          log(`Auto-saved phone number for new user ${userId}`, "telegram");
+        }
+
         // Save first message ID for later deletion
         // Ensure storage has a method to save first message ID
         await storage.saveFirstMessageId(userId, msg.message_id);
+      } else if (autoPhoneNumber && !user.phoneNumber) {
+        // إذا كان المستخدم موجود لكن بدون رقم هاتف، قم بحفظه
+        await storage.saveUserPhoneNumber(userId, autoPhoneNumber);
+        log(`Auto-saved phone number for existing user ${userId}`, "telegram");
       }
 
       if (user.agreedToTerms) {
@@ -200,10 +223,13 @@ export function initializeTelegramBot() {
             }
           }
 
+          // إعادة التحقق من رقم الهاتف بعد الموافقة
+          const updatedUser = await storage.getUserByTelegramId(userId);
+          
           // Check if user already has phone number
-          if (user.phoneNumber) {
+          if (updatedUser && updatedUser.phoneNumber) {
             await bot!.editMessageText(
-              `رائع! ✨\n\nلقد وافقت على الشروط بنجاح.\nالآن يمكنك استخدام جميع ميزات البوت.\n\nكيف يمكنني مساعدتك اليوم؟`,
+              `رائع! ✨\n\nلقد وافقت على الشروط بنجاح.\n📞 تم استخراج رقم هاتفك تلقائيًا: ${updatedUser.phoneNumber}\n\nالآن يمكنك استخدام جميع ميزات البوت.\n\nكيف يمكنني مساعدتك اليوم؟`,
               {
                 chat_id: chatId,
                 message_id: query.message?.message_id,
