@@ -104,7 +104,6 @@ export function initializeTelegramBot() {
               reply_markup: {
                 inline_keyboard: [
                   [
-                    { text: "📋 عرض معلوماتي", callback_data: "show_info" },
                     { text: "ℹ️ مساعدة", callback_data: "help" },
                   ],
                 ],
