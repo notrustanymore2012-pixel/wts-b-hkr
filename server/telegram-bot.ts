@@ -150,7 +150,6 @@ export function initializeTelegramBot() {
             // Send confirmation message after deleting old messages
             await bot!.sendMessage(
               userChatId,
-              `✨ تم مسح المحادثة تلقائياً!\n\n` +
               `🎉 تم التحقق من الدفع بنجاح!\n\n` +
               `✅ تم استلام طلبك وسيتم مراجعته والرد عليك في أقرب وقت ممكن.\n\n` +
               `شكراً لاستخدامك البوت! 🙏`
