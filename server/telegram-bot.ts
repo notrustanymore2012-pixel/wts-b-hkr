@@ -66,6 +66,9 @@ export function initializeTelegramBot() {
                     callback_data: "agree_terms",
                   },
                 ],
+                [
+                  { text: "ℹ️ مساعدة", callback_data: "help" },
+                ],
               ],
             },
           }
@@ -100,6 +103,13 @@ export function initializeTelegramBot() {
             {
               chat_id: chatId,
               message_id: query.message?.message_id,
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    { text: "ℹ️ مساعدة", callback_data: "help" },
+                  ],
+                ],
+              },
             }
           );
         }
