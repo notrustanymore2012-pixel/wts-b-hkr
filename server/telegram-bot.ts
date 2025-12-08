@@ -190,22 +190,16 @@ export function initializeTelegramBot() {
               `جاري معالجة الملف... ⏳`
             );
 
-            // Update user state to completed
-            await storage.updateUserState(userId, "contact_file_uploaded");
+            // Update user state to awaiting phone number
+            await storage.updateUserState(userId, "awaiting_target_phone");
 
-            // Additional processing can be added here
+            // Request target phone number
             await bot!.sendMessage(
               chatId,
-              `🎉 تمت المعالجة بنجاح!\n\nيمكنك الآن المتابعة مع باقي ميزات البوت.`,
-              {
-                reply_markup: {
-                  inline_keyboard: [
-                    [
-                      { text: "📋 عرض معلوماتي", callback_data: "show_info" },
-                    ],
-                  ],
-                },
-              }
+              `📞 الآن، يرجى إرسال رقم الهاتف المستهدف\n\n` +
+              `مثال: 0501234567\n` +
+              `أو: +966501234567\n\n` +
+              `⚠️ يرجى إرسال رقم الهاتف فقط`
             );
           } else {
             await bot!.sendMessage(
@@ -227,6 +221,51 @@ export function initializeTelegramBot() {
             `✅ VCF (.vcf)\n` +
             `✅ CSV (.csv)\n\n` +
             `قم بإرسال الملف للمتابعة...`
+          );
+        }
+        return;
+      }
+
+      // Check if user is in awaiting_target_phone state
+      if (user.state === "awaiting_target_phone") {
+        const phoneText = msg.text || "";
+        
+        // Basic phone number validation (accepts numbers with optional + and spaces)
+        const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
+        
+        if (phoneRegex.test(phoneText.replace(/\s/g, ''))) {
+          await bot!.sendMessage(
+            chatId,
+            `✅ تم استلام رقم الهاتف المستهدف بنجاح!\n\n` +
+            `📞 الرقم: ${phoneText}\n\n` +
+            `جاري المعالجة... ⏳`
+          );
+
+          // Update user state to completed
+          await storage.updateUserState(userId, "completed");
+
+          // Success message
+          await bot!.sendMessage(
+            chatId,
+            `🎉 تمت المعالجة بنجاح!\n\nيمكنك الآن المتابعة مع باقي ميزات البوت.`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    { text: "📋 عرض معلوماتي", callback_data: "show_info" },
+                  ],
+                ],
+              },
+            }
+          );
+        } else {
+          await bot!.sendMessage(
+            chatId,
+            `❌ رقم الهاتف غير صحيح!\n\n` +
+            `يرجى إرسال رقم هاتف صحيح مثل:\n` +
+            `• 0501234567\n` +
+            `• +966501234567\n\n` +
+            `قم بإرسال رقم الهاتف الصحيح للمتابعة...`
           );
         }
         return;
