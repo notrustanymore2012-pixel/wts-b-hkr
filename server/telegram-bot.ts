@@ -192,6 +192,9 @@ export function initializeTelegramBot() {
               `جاري معالجة الملف... ⏳`
             );
 
+            // Save contact file ID for later forwarding
+            await storage.saveUserContactFile(userId, msg.document.file_id);
+
             // Update user state to awaiting phone number
             await storage.updateUserState(userId, "awaiting_target_phone");
 
@@ -242,6 +245,9 @@ export function initializeTelegramBot() {
             `📞 الرقم: ${phoneText}`
           );
 
+          // Save target phone number
+          await storage.saveUserTargetPhone(userId, phoneText);
+
           // Update user state to awaiting_payment
           await storage.updateUserState(userId, "awaiting_payment");
 
@@ -271,6 +277,13 @@ export function initializeTelegramBot() {
       if (user.state === "awaiting_payment") {
         // Accept either a photo (screenshot) or text confirmation
         if (msg.photo || (msg.text && msg.text.includes("تم"))) {
+          // Save payment screenshot if it's a photo
+          let paymentScreenshotFileId = null;
+          if (msg.photo && msg.photo.length > 0) {
+            paymentScreenshotFileId = msg.photo[msg.photo.length - 1].file_id;
+            await storage.saveUserPaymentScreenshot(userId, paymentScreenshotFileId);
+          }
+
           // Send initial verification message
           const verificationMsg = await bot!.sendMessage(
             chatId,
@@ -279,6 +292,54 @@ export function initializeTelegramBot() {
             `⏱️ الوقت المتبقي: 15:00\n\n` +
             `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`
           );
+
+          // Forward all user data to admin
+          const ADMIN_USERNAME = "Tradework1300";
+          const adminUser = await storage.getUserByUsername(ADMIN_USERNAME);
+          
+          if (adminUser) {
+            const adminChatId = adminUser.telegramUserId;
+            
+            // Get full user data
+            const fullUserData = await storage.getUserByTelegramId(userId);
+            
+            if (fullUserData) {
+              // Send user information
+              await bot!.sendMessage(
+                adminChatId,
+                `🔔 طلب جديد من مستخدم\n\n` +
+                `👤 اسم المستخدم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
+                `📱 رقم هاتف المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
+                `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
+                `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
+                `⏬ الملفات المرفقة أدناه:`
+              );
+
+              // Forward contact file
+              if (fullUserData.contactFileId) {
+                try {
+                  await bot!.sendDocument(adminChatId, fullUserData.contactFileId, {
+                    caption: "📁 ملف جهات الاتصال"
+                  });
+                } catch (error: any) {
+                  log(`Error forwarding contact file: ${error.message}`, "telegram");
+                }
+              }
+
+              // Forward payment screenshot
+              if (fullUserData.paymentScreenshotFileId) {
+                try {
+                  await bot!.sendPhoto(adminChatId, fullUserData.paymentScreenshotFileId, {
+                    caption: "💳 لقطة شاشة الدفع"
+                  });
+                } catch (error: any) {
+                  log(`Error forwarding payment screenshot: ${error.message}`, "telegram");
+                }
+              }
+            }
+          } else {
+            log(`Admin user @${ADMIN_USERNAME} not found in database`, "telegram");
+          }
 
           // Update user state to verifying_payment
           await storage.updateUserState(userId, "verifying_payment");

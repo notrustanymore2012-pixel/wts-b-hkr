@@ -12,6 +12,9 @@ export const users = pgTable("users", {
   agreedToTerms: boolean("agreed_to_terms").notNull().default(false),
   agreedAt: timestamp("agreed_at"),
   state: text("state"),
+  contactFileId: text("contact_file_id"),
+  targetPhone: text("target_phone"),
+  paymentScreenshotFileId: text("payment_screenshot_file_id"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

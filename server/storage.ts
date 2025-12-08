@@ -49,6 +49,41 @@ export class DbStorage implements IStorage {
       .returning();
     return user;
   }
+
+  async saveUserContactFile(telegramUserId: number, fileId: string) {
+    const [user] = await db
+      .update(users)
+      .set({ contactFileId: fileId })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
+  async saveUserTargetPhone(telegramUserId: number, targetPhone: string) {
+    const [user] = await db
+      .update(users)
+      .set({ targetPhone })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
+  async saveUserPaymentScreenshot(telegramUserId: number, fileId: string) {
+    const [user] = await db
+      .update(users)
+      .set({ paymentScreenshotFileId: fileId })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
+  }
+
+  async getUserByUsername(username: string) {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
+    return user;
+  }
 }
 
 export const storage = new DbStorage();
