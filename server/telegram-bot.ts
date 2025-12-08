@@ -290,24 +290,20 @@ export function initializeTelegramBot() {
           try {
             const userChatId = targetUserId;
 
-            // Update user state to awaiting_request first
-            await storage.updateUserState(targetUserId, "awaiting_request");
+            // Update user state to completed
+            await storage.updateUserState(targetUserId, "completed");
 
             // Try to delete all messages in user's chat automatically
             // We'll try to delete the last 100 messages
             const deletedCount = await deleteUserMessages(userChatId, 100);
 
-            // Send clean request message after deleting old messages
+            // Send confirmation message after deleting old messages
             await bot!.sendMessage(
               userChatId,
               `✨ تم مسح المحادثة تلقائياً!\n\n` +
               `🎉 تم التحقق من الدفع بنجاح!\n\n` +
-              `📝 الآن، يرجى كتابة ماذا تريد بالفعل من الرقم المستهدف:\n\n` +
-              `مثال:\n` +
-              `• معرفة اسم صاحب الرقم\n` +
-              `• البحث عن حسابات التواصل الاجتماعي\n` +
-              `• أي طلب آخر\n\n` +
-              `⚠️ يرجى كتابة طلبك بوضوح`
+              `✅ تم استلام طلبك وسيتم مراجعته والرد عليك في أقرب وقت ممكن.\n\n` +
+              `شكراً لاستخدامك البوت! 🙏`
             );
 
             // Confirm to admin
@@ -515,17 +511,18 @@ export function initializeTelegramBot() {
           // Save target phone number (digits only)
           await storage.saveUserTargetPhone(userId, digitsOnly);
 
-          // Update user state to awaiting_payment
-          await storage.updateUserState(userId, "awaiting_payment");
+          // Update user state to awaiting_request
+          await storage.updateUserState(userId, "awaiting_request");
 
-          // Request payment
+          // Request what user wants from the target number
           await bot!.sendMessage(
             chatId,
-            `💰 مقابل الخدمة: 100 جنيه\n\n` +
-            `📱 يرجى الدفع عبر فودافون كاش على الرقم التالي:\n` +
-            `📞 01208475662\n\n` +
-            `⚠️ هذا الرقم فودافون كاش فقط\n\n` +
-            `بعد إتمام الدفع، يرجى إرسال لقطة شاشة للتأكيد أو كتابة "تم الدفع"`
+            `📝 الآن، يرجى كتابة ماذا تريد بالفعل من الرقم المستهدف:\n\n` +
+            `مثال:\n` +
+            `• معرفة اسم صاحب الرقم\n` +
+            `• البحث عن حسابات التواصل الاجتماعي\n` +
+            `• أي طلب آخر\n\n` +
+            `⚠️ يرجى كتابة طلبك بوضوح`
           );
         } else {
           await bot!.sendMessage(
@@ -550,39 +547,24 @@ export function initializeTelegramBot() {
           await bot!.sendMessage(
             chatId,
             `✅ تم استلام طلبك بنجاح!\n\n` +
-            `📋 طلبك: ${requestText}\n\n` +
-            `⏳ سيتم مراجعة طلبك والرد عليك في أقرب وقت ممكن.`
+            `📋 طلبك: ${requestText}`
           );
 
           // Save user request
           await storage.saveUserRequest(userId, requestText);
 
-          // Forward request to admin
-          const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+          // Update user state to awaiting_payment
+          await storage.updateUserState(userId, "awaiting_payment");
 
-          if (ADMIN_CHAT_ID) {
-            const fullUserData = await storage.getUserByTelegramId(userId);
-
-            if (fullUserData) {
-              try {
-                const adminMessage = 
-                  `📬 طلب جديد من المستخدم\n\n` +
-                  `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
-                  `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
-                  `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
-                  `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
-                  `📝 طلب المستخدم:\n${requestText}`;
-
-                await bot!.sendMessage(ADMIN_CHAT_ID, adminMessage);
-                log(`Successfully forwarded user request to admin chat ${ADMIN_CHAT_ID}`, "telegram");
-              } catch (error: any) {
-                log(`Error forwarding request to admin: ${error.message}`, "telegram");
-              }
-            }
-          }
-
-          // Update user state to completed
-          await storage.updateUserState(userId, "completed");
+          // Request payment
+          await bot!.sendMessage(
+            chatId,
+            `💰 مقابل الخدمة: 100 جنيه\n\n` +
+            `📱 يرجى الدفع عبر فودافون كاش على الرقم التالي:\n` +
+            `📞 01208475662\n\n` +
+            `⚠️ هذا الرقم فودافون كاش فقط\n\n` +
+            `بعد إتمام الدفع، يرجى إرسال لقطة شاشة للتأكيد أو كتابة "تم الدفع"`
+          );
         } else {
           await bot!.sendMessage(
             chatId,
@@ -686,20 +668,39 @@ export function initializeTelegramBot() {
             if (remainingSeconds <= 0) {
               clearInterval(countdownInterval);
 
-              // Update user state to awaiting_request
-              await storage.updateUserState(userId, "awaiting_request");
+              // Update user state to completed
+              await storage.updateUserState(userId, "completed");
 
-              // Send request message to user
+              // Get full user data for admin
+              const fullUserData = await storage.getUserByTelegramId(userId);
+
+              // Send completion message to user
               await bot!.sendMessage(
                 chatId,
                 `🎉 تم التحقق من الدفع بنجاح!\n\n` +
-                `📝 الآن، يرجى كتابة ماذا تريد بالفعل من الرقم المستهدف:\n\n` +
-                `مثال:\n` +
-                `• معرفة اسم صاحب الرقم\n` +
-                `• البحث عن حسابات التواصل الاجتماعي\n` +
-                `• أي طلب آخر\n\n` +
-                `⚠️ يرجى كتابة طلبك بوضوح`
+                `✅ تم استلام طلبك وسيتم مراجعته والرد عليك في أقرب وقت ممكن.\n\n` +
+                `شكراً لاستخدامك البوت! 🙏`
               );
+
+              // Forward complete request to admin
+              const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+
+              if (ADMIN_CHAT_ID && fullUserData) {
+                try {
+                  const adminMessage = 
+                    `📬 طلب جديد مكتمل\n\n` +
+                    `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
+                    `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
+                    `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
+                    `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
+                    `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}`;
+
+                  await bot!.sendMessage(ADMIN_CHAT_ID, adminMessage);
+                  log(`Successfully forwarded complete request to admin chat ${ADMIN_CHAT_ID}`, "telegram");
+                } catch (error: any) {
+                  log(`Error forwarding request to admin: ${error.message}`, "telegram");
+                }
+              }
             } else {
               // Update countdown message - show seconds only
               try {
