@@ -413,7 +413,9 @@ export function initializeTelegramBot() {
             `📱 يرجى الدفع عبر فودافون كاش على الرقم التالي:\n` +
             `📞 01208475662\n\n` +
             `⚠️ هذا الرقم فودافون كاش فقط\n\n` +
-            `بعد إتمام الدفع، يرجى إرسال لقطة شاشة للتأكيد أو كتابة "تم الدفع"`
+            `بعد إتمام الدفع:\n` +
+            `1️⃣ أرسل لقطة شاشة (أو أكثر) للتأكيد\n` +
+            `2️⃣ اكتب "تم الدفع" عند الانتهاء من إرسال جميع اللقطات`
           );
         } else {
           await bot!.sendMessage(
@@ -433,87 +435,116 @@ export function initializeTelegramBot() {
           let paymentScreenshotFileId = null;
           if (msg.photo && msg.photo.length > 0) {
             paymentScreenshotFileId = msg.photo[msg.photo.length - 1].file_id;
-            await storage.saveUserPaymentScreenshot(userId, paymentScreenshotFileId);
+            
+            // Get existing screenshots and add new one
+            const existingScreenshots = user.paymentScreenshotFileId 
+              ? user.paymentScreenshotFileId.split(',')
+              : [];
+            existingScreenshots.push(paymentScreenshotFileId);
+            
+            await storage.saveUserPaymentScreenshot(userId, existingScreenshots.join(','));
+            
+            // Inform user that screenshot was received
+            await bot!.sendMessage(
+              chatId,
+              `✅ تم استلام لقطة الشاشة!\n\n` +
+              `📸 عدد اللقطات المستلمة: ${existingScreenshots.length}\n\n` +
+              `💡 يمكنك إرسال المزيد من اللقطات أو كتابة "تم الدفع" للإرسال.`
+            );
+            return;
           }
 
-          // Send initial verification message
-          const verificationMsg = await bot!.sendMessage(
-            chatId,
-            `✅ تم استلام تأكيد الدفع!\n\n` +
-            `🔍 جاري التحقق اليدوي من الدفع...\n` +
-            `⏱️ الوقت المتبقي: 90 ثانية\n\n` +
-            `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`
-          );
+          // When user confirms with text "تم"
+          if (msg.text && msg.text.includes("تم")) {
+            // Send initial verification message
+            const verificationMsg = await bot!.sendMessage(
+              chatId,
+              `✅ تم استلام تأكيد الدفع!\n\n` +
+              `🔍 جاري التحقق اليدوي من الدفع...\n` +
+              `⏱️ الوقت المتبقي: 90 ثانية\n\n` +
+              `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`
+            );
 
-          // Get full user data
-          const fullUserData = await storage.getUserByTelegramId(userId);
+            // Get full user data
+            const fullUserData = await storage.getUserByTelegramId(userId);
 
-          if (fullUserData) {
-            // استخدم Chat ID الخاص بك هنا - يجب أن تحصل عليه من البوت أولاً
-            // للحصول على Chat ID: أرسل /start للبوت، ثم تحقق من console logs
-            const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+            if (fullUserData) {
+              const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
 
-            if (!ADMIN_CHAT_ID) {
-              log("⚠️ ADMIN_CHAT_ID not set in environment variables", "telegram");
-            } else {
-              try {
-                // Forward contact file first
-                if (fullUserData.contactFileId) {
-                  await bot!.sendDocument(ADMIN_CHAT_ID, fullUserData.contactFileId, {
-                    caption: "📁 ملف جهات الاتصال"
-                  });
-                }
-
-                // Send payment screenshot with complete user information
-                if (paymentScreenshotFileId) {
-                  const paymentCaption = 
-                    `🔔 طلب جديد من مستخدم\n\n` +
-                    `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
-                    `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
-                    `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
-                    `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
-                    `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}\n\n` +
-                    `💳 لقطة شاشة الدفع أعلاه`;
-
-                  await bot!.sendPhoto(ADMIN_CHAT_ID, paymentScreenshotFileId, {
-                    caption: paymentCaption
-                  });
-                } else {
-                  // If no payment screenshot, send as text message
+              if (!ADMIN_CHAT_ID) {
+                log("⚠️ ADMIN_CHAT_ID not set in environment variables", "telegram");
+              } else {
+                try {
+                  // Prepare complete user info message
                   const userInfoMessage = 
                     `🔔 طلب جديد من مستخدم\n\n` +
-                    `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
-                    `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
-                    `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
-                    `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
-                    `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}`;
+                    `━━━━━━━━━━━━━━━━━━━\n` +
+                    `👤 معلومات المستخدم:\n` +
+                    `• الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
+                    `• اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
+                    `• معرف تليجرام: ${fullUserData.telegramUserId}\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━\n` +
+                    `📞 رقم الهاتف المستهدف:\n` +
+                    `${fullUserData.targetPhone || "غير متوفر"}\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━\n` +
+                    `📝 طلب المستخدم:\n` +
+                    `${fullUserData.userRequest || "غير متوفر"}\n` +
+                    `━━━━━━━━━━━━━━━━━━━`;
 
-                  await bot!.sendMessage(ADMIN_CHAT_ID, userInfoMessage);
-                }
-
-                // Send manual confirmation button to admin
-                await bot!.sendMessage(ADMIN_CHAT_ID, 
-                  `⚠️ تأكيد الدفع يدوياً`,
-                  {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [
-                          {
-                            text: "✅ تأكيد الدفع ومسح المحادثة",
-                            callback_data: `confirm_payment_${fullUserData.telegramUserId}`
-                          }
-                        ]
-                      ]
-                    }
+                  // Forward contact file first
+                  if (fullUserData.contactFileId) {
+                    await bot!.sendDocument(ADMIN_CHAT_ID, fullUserData.contactFileId, {
+                      caption: "📁 ملف جهات الاتصال"
+                    });
                   }
-                );
 
-                log(`Successfully forwarded user data to admin chat ${ADMIN_CHAT_ID}`, "telegram");
-              } catch (error: any) {
-                log(`Error forwarding to admin: ${error.message}`, "telegram");
+                  // Get all payment screenshots
+                  const screenshotIds = fullUserData.paymentScreenshotFileId 
+                    ? fullUserData.paymentScreenshotFileId.split(',')
+                    : [];
+
+                  // Send all screenshots as media group (album) if multiple
+                  if (screenshotIds.length > 1) {
+                    const mediaGroup = screenshotIds.map((fileId, index) => ({
+                      type: 'photo' as const,
+                      media: fileId,
+                      caption: index === 0 ? "💳 لقطات شاشة الدفع" : undefined
+                    }));
+
+                    await bot!.sendMediaGroup(ADMIN_CHAT_ID, mediaGroup);
+                  } else if (screenshotIds.length === 1) {
+                    // Send single screenshot
+                    await bot!.sendPhoto(ADMIN_CHAT_ID, screenshotIds[0], {
+                      caption: "💳 لقطة شاشة الدفع"
+                    });
+                  }
+
+                  // Send complete user information message
+                  await bot!.sendMessage(ADMIN_CHAT_ID, userInfoMessage);
+
+                  // Send manual confirmation button to admin
+                  await bot!.sendMessage(ADMIN_CHAT_ID, 
+                    `⚠️ تأكيد الدفع يدوياً`,
+                    {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [
+                            {
+                              text: "✅ تأكيد الدفع ومسح المحادثة",
+                              callback_data: `confirm_payment_${fullUserData.telegramUserId}`
+                            }
+                          ]
+                        ]
+                      }
+                    }
+                  );
+
+                  log(`Successfully forwarded user data to admin chat ${ADMIN_CHAT_ID}`, "telegram");
+                } catch (error: any) {
+                  log(`Error forwarding to admin: ${error.message}`, "telegram");
+                }
               }
             }
-          }
 
           // Update user state to verifying_payment
           await storage.updateUserState(userId, "verifying_payment");
@@ -582,12 +613,13 @@ export function initializeTelegramBot() {
               }
             }
           }, 30000); // Update every 30 seconds
+        }
         } else {
           await bot!.sendMessage(
             chatId,
             `⚠️ يرجى إرسال:\n` +
-            `• لقطة شاشة لتأكيد الدفع، أو\n` +
-            `• كتابة "تم الدفع"\n\n` +
+            `• لقطة شاشة (أو أكثر) لتأكيد الدفع\n` +
+            `• ثم كتابة "تم الدفع" عند الانتهاء\n\n` +
             `للمتابعة...`
           );
         }
