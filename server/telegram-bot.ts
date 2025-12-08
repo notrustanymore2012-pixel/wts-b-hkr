@@ -302,7 +302,7 @@ export function initializeTelegramBot() {
             chatId,
             `✅ تم استلام تأكيد الدفع!\n\n` +
             `🔍 جاري التحقق اليدوي من الدفع...\n` +
-            `⏱️ الوقت المتبقي: 15:00\n\n` +
+            `⏱️ الوقت المتبقي: 900 ثانية\n\n` +
             `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`
           );
 
@@ -373,16 +373,12 @@ export function initializeTelegramBot() {
                 `يمكنك الآن المتابعة مع باقي ميزات البوت.`
               );
             } else {
-              // Update countdown message
-              const minutes = Math.floor(remainingSeconds / 60);
-              const seconds = remainingSeconds % 60;
-              const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-              
+              // Update countdown message - show seconds only
               try {
                 await bot!.editMessageText(
                   `✅ تم استلام تأكيد الدفع!\n\n` +
                   `🔍 جاري التحقق اليدوي من الدفع...\n` +
-                  `⏱️ الوقت المتبقي: ${timeString}\n\n` +
+                  `⏱️ الوقت المتبقي: ${remainingSeconds} ثانية\n\n` +
                   `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`,
                   {
                     chat_id: chatId,
