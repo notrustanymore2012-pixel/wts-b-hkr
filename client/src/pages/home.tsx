@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { CheckCircle2, ShieldCheck, MessageCircle, Bot, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const HACKER_LINKS = [
   "https://otieu.com/4/10300426",
@@ -21,14 +22,14 @@ export default function Home() {
   const [agreed, setAgreed] = useState(false);
   const [started, setStarted] = useState(false);
   const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
+  const [openDialog, setOpenDialog] = useState<string | null>(null);
 
   const handleStart = () => {
     setStarted(true);
   };
 
   const handleHackerServices = () => {
-    window.open(HACKER_LINKS[currentLinkIndex], '_blank');
-    setCurrentLinkIndex((prevIndex) => (prevIndex + 1) % HACKER_LINKS.length);
+    setOpenDialog('hacker');
   };
 
   return (
@@ -185,6 +186,59 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog open={openDialog === 'hacker'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-right text-xl font-bold">🔗 روابط خدمات هكرز 🔗</DialogTitle>
+            <DialogDescription className="text-right">
+              اختر الرابط الذي تريد فتحه
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <Button
+              variant="outline"
+              className="w-full justify-between h-12 text-base"
+              onClick={() => window.open('https://t.me/xxnx11bot', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>رابط 1</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-between h-12 text-base"
+              onClick={() => window.open('https://t.me/ggaa144bot', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>رابط 2</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-between h-12 text-base"
+              onClick={() => window.open('https://t.me/bxnnxbot', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>رابط 3</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-between h-12 text-base"
+              onClick={() => window.open('https://t.me/SOURCE_MAFIA', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>رابط 4</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-between h-12 text-base"
+              onClick={() => window.open('https://t.me/nnxnn1bot', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>رابط 5</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
