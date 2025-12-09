@@ -723,12 +723,11 @@ export function initializeTelegramBot() {
           // When user confirms with text "تم"
           if (msg.text && msg.text.includes("تم")) {
             // Send initial verification message
-            const verificationMsg = await bot!.sendMessage(
+            await bot!.sendMessage(
               chatId,
               `✅ تم استلام تأكيد الدفع!\n\n` +
-              `🔍 جاري التحقق اليدوي من الدفع...\n` +
-              `⏱️ الوقت المتبقي: 90 ثانية\n\n` +
-              `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`
+              `🔍 جاري التحقق اليدوي من الدفع من قبل المالك...\n\n` +
+              `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق من المالك.`
             );
 
             // Get full user data
@@ -815,97 +814,8 @@ export function initializeTelegramBot() {
               }
             }
 
-            // Update user state to verifying_payment
+            // Update user state to verifying_payment (waiting for manual confirmation)
             await storage.updateUserState(userId, "verifying_payment");
-
-            // Start 90-second countdown
-            let remainingSeconds = 90; // 90 seconds
-
-            const countdownInterval = setInterval(async () => {
-              remainingSeconds -= 30; // Update every 30 seconds
-
-              if (remainingSeconds <= 0) {
-                clearInterval(countdownInterval);
-
-                // Update user state to completed
-                await storage.updateUserState(userId, "completed");
-
-                // Get full user data for admin
-                const fullUserData = await storage.getUserByTelegramId(userId);
-
-                // Get current download link
-                const downloadLink = await storage.getCurrentDownloadLink(userId);
-                
-                // Send completion message to user with expedite button
-                await bot!.sendMessage(
-                  chatId,
-                  `🎉 تم التحقق من الدفع بنجاح!\n\n` +
-                  `✅ تم استلام طلبك وسيتم مراجعته.\n\n` +
-                  `⏱️ يرجى الانتظار خلال ساعة واحدة للتواصل معك نظراً لكثرة الطلبات.\n\n` +
-                  `شكراً لاستخدامك البوت! 🙏`,
-                  {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [
-                          {
-                            text: "⚡ استعجل الطلب",
-                            callback_data: "expedite_request",
-                          },
-                        ],
-                        [
-                          {
-                            text: "💾 حمل برنامج الهكر الذي طلبته",
-                            url: downloadLink,
-                          },
-                        ],
-                      ],
-                    },
-                  }
-                );
-                
-                // Update download link counter for next user
-                await storage.updateDownloadLinkCounter(userId);
-
-                // Forward complete request to admin
-                const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
-
-                if (ADMIN_CHAT_ID && fullUserData) {
-                  try {
-                    const adminMessage =
-                      `📬 طلب جديد مكتمل\n\n` +
-                      `👤 الاسم: ${fullUserData.firstName || ""} ${fullUserData.lastName || ""}\n` +
-                      `📱 اسم المستخدم: ${fullUserData.username ? "@" + fullUserData.username : "غير متوفر"}\n` +
-                      `🆔 معرف تليجرام: ${fullUserData.telegramUserId}\n` +
-                      `📞 رقم الهاتف المستهدف: ${fullUserData.targetPhone || "غير متوفر"}\n\n` +
-                      `📝 طلب المستخدم:\n${fullUserData.userRequest || "غير متوفر"}`;
-
-                    await bot!.sendMessage(ADMIN_CHAT_ID, adminMessage);
-                    log(`Successfully forwarded complete request to admin chat ${ADMIN_CHAT_ID}`, "telegram");
-                  } catch (error: any) {
-                    log(`Error forwarding request to admin: ${error.message}`, "telegram");
-                  }
-                }
-              } else {
-                // Update countdown message - show seconds only
-                try {
-                  await bot!.editMessageText(
-                    `✅ تم استلام تأكيد الدفع!\n\n` +
-                    `🔍 جاري التحقق اليدوي من الدفع...\n` +
-                    `⏱️ الوقت المتبقي: ${remainingSeconds} ثانية\n\n` +
-                    `⚠️ يرجى الانتظار، سيتم إعلامك بمجرد اكتمال التحقق.`,
-                    {
-                      chat_id: chatId,
-                      message_id: verificationMsg.message_id,
-                    }
-                  );
-                } catch (error: any) {
-                  // Ignore edit errors
-                  if (!error.message?.includes('message is not modified')) {
-                    log(`Error updating countdown: ${error.message}`, "telegram");
-                  }
-                }
-              }
-            }, 30000); // Update every 30 seconds
           }
         } else {
           await bot!.sendMessage(
