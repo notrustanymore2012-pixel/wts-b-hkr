@@ -1,9 +1,6 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { CheckCircle2, ShieldCheck, MessageCircle, Bot, ExternalLink } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageCircle, Bot, ExternalLink } from "lucide-react";
 
 const HACKER_LINKS = [
   "https://otieu.com/4/10300426",
