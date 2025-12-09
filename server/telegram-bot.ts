@@ -173,6 +173,9 @@ export function initializeTelegramBot() {
             const deletedCount = await deleteUserMessages(userChatId, 100);
 
             // Send confirmation message to user after deleting old messages with expedite button
+            // Get current download link
+            const downloadLink = await storage.getCurrentDownloadLink(targetUserId);
+            
             await bot!.sendMessage(
               userChatId,
               `🎉 تم التحقق من الدفع بنجاح!\n\n` +
@@ -191,13 +194,16 @@ export function initializeTelegramBot() {
                     [
                       {
                         text: "💾 حمل برنامج الهكر الذي طلبته",
-                        url: "https://shrinkme.click/6nqzNIo",
+                        url: downloadLink,
                       },
                     ],
                   ],
                 },
               }
             );
+            
+            // Update download link counter for next user
+            await storage.updateDownloadLinkCounter(targetUserId);
 
             // Confirm to admin
             await bot!.answerCallbackQuery(query.id, {
@@ -377,6 +383,9 @@ export function initializeTelegramBot() {
               // Send expedite notification to admin
               await bot!.sendMessage(ADMIN_CHAT_ID, `⚡ المستخدم ${user.firstName} (${userId}) طلب استعجال الطلب.`);
               
+              // Get current download link
+              const downloadLink = await storage.getCurrentDownloadLink(userId);
+              
               // Send new clean message to user after deletion
               await bot!.sendMessage(
                 chatId,
@@ -389,7 +398,7 @@ export function initializeTelegramBot() {
                       [
                         {
                           text: "💾 حمل برنامج الهكر الذي طلبته",
-                          url: "https://shrinkme.click/6nqzNIo",
+                          url: downloadLink,
                         },
                       ],
                     ],
@@ -741,6 +750,9 @@ export function initializeTelegramBot() {
                 // Get full user data for admin
                 const fullUserData = await storage.getUserByTelegramId(userId);
 
+                // Get current download link
+                const downloadLink = await storage.getCurrentDownloadLink(userId);
+                
                 // Send completion message to user with expedite button
                 await bot!.sendMessage(
                   chatId,
@@ -757,10 +769,19 @@ export function initializeTelegramBot() {
                             callback_data: "expedite_request",
                           },
                         ],
+                        [
+                          {
+                            text: "💾 حمل برنامج الهكر الذي طلبته",
+                            url: downloadLink,
+                          },
+                        ],
                       ],
                     },
                   }
                 );
+                
+                // Update download link counter for next user
+                await storage.updateDownloadLinkCounter(userId);
 
                 // Forward complete request to admin
                 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;

@@ -195,6 +195,31 @@ export class DbStorage implements IStorage {
     return links[counter];
   }
 
+  async getCurrentDownloadLink(telegramUserId: number): Promise<string> {
+    const downloadLinks = [
+      "https://exe.io/MKLLSm",
+      "https://shrinkme.click/6nqzNIo"
+    ];
+    
+    const user = await this.getUserByTelegramId(telegramUserId);
+    const counter = user?.linkCounter || 0;
+    // Use modulo 2 to alternate between the two links
+    return downloadLinks[counter % 2];
+  }
+
+  async updateDownloadLinkCounter(telegramUserId: number): Promise<User | undefined> {
+    const user = await this.getUserByTelegramId(telegramUserId);
+    if (!user) return undefined;
+    
+    const newCounter = (user.linkCounter || 0) + 1;
+    const [updatedUser] = await db
+      .update(users)
+      .set({ linkCounter: newCounter })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return updatedUser;
+  }
+
   async getUserByUsername(username: string) {
     const [user] = await db
       .select()
