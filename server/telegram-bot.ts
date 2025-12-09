@@ -334,14 +334,18 @@ export function initializeTelegramBot() {
         await storage.updateLinkCounter(userId);
         
         try {
-          await bot!.answerCallbackQuery(query.id, {
-            url: currentLink
-          });
+          await bot!.answerCallbackQuery(query.id);
         } catch (error: any) {
           if (!error.message?.includes('query is too old')) {
             log(`Error answering callback query: ${error.message}`, "telegram");
           }
         }
+        
+        // Send link as a message
+        await bot!.sendMessage(
+          chatId,
+          `🔧 خدمات هكرز إضافية:\n\n${currentLink}\n\nاضغط على الرابط للوصول إلى الخدمات`
+        );
       } else if (data === "expedite_request") {
         // Handle expedite request
         const user = await storage.getUserByTelegramId(userId);
