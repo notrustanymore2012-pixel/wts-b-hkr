@@ -4,12 +4,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { CheckCircle2, ShieldCheck, MessageCircle, Bot, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const HACKER_LINKS = [
+  "https://otieu.com/4/10300426",
+  "https://otieu.com/4/10300338",
+  "https://otieu.com/4/10300428",
+  "https://otieu.com/4/10300429",
+  "https://otieu.com/4/10300447",
+  "https://otieu.com/4/10300452",
+  "https://otieu.com/4/10300459",
+  "https://otieu.com/4/10300461",
+  "https://otieu.com/4/10300467",
+  "https://otieu.com/4/10300469",
+];
+
 export default function Home() {
   const [agreed, setAgreed] = useState(false);
   const [started, setStarted] = useState(false);
+  const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
 
   const handleStart = () => {
     setStarted(true);
+  };
+
+  const handleHackerServices = () => {
+    window.open(HACKER_LINKS[currentLinkIndex], '_blank');
+    setCurrentLinkIndex((prevIndex) => (prevIndex + 1) % HACKER_LINKS.length);
   };
 
   return (
@@ -149,6 +168,15 @@ export default function Home() {
                   data-testid="button-open-telegram"
                 >
                   <span className="ml-2">فتح البوت في تليجرام</span>
+                  <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+
+                <Button 
+                  className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-lg group"
+                  onClick={handleHackerServices}
+                  data-testid="button-hacker-services"
+                >
+                  <span className="ml-2">خدمات هكرز</span>
                   <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
 
