@@ -113,7 +113,6 @@ export function initializeTelegramBot() {
               inline_keyboard: [
                 [
                   { text: "ℹ️ مساعدة", callback_data: "help" },
-                  { text: "🎓 تعلم الهكر في خمس خطوات بدون برامج", callback_data: "learn_hacking" },
                 ],
                 [
                   { text: "🔧 خدمات هكرز اكثر", url: "https://otieu.com/4/10300338" },
@@ -137,7 +136,6 @@ export function initializeTelegramBot() {
                 ],
                 [
                   { text: "ℹ️ مساعدة", callback_data: "help" },
-                  { text: "🎓 تعلم الهكر في خمس خطوات بدون برامج", callback_data: "learn_hacking" },
                 ],
                 [
                   { text: "🔧 خدمات هكرز اكثر", url: "https://otieu.com/4/10300338" },
@@ -366,32 +364,6 @@ export function initializeTelegramBot() {
             await bot!.answerCallbackQuery(query.id, { text: "❌ تعذر إرسال طلب الاستعجال (خطأ في الإعدادات)" });
           }
         }
-      } else if (data === "learn_hacking") {
-        try {
-          await bot!.answerCallbackQuery(query.id);
-        } catch (error: any) {
-          if (!error.message?.includes('query is too old')) {
-            log(`Error answering callback query: ${error.message}`, "telegram");
-          }
-        }
-
-        await bot!.sendMessage(
-          chatId,
-          `🎓 تعلم الهكر في خمس خطوات بدون برامج\n\n` +
-          `✨ اضغط على الرابط أدناه للبدء:`,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "🚀 ابدأ التعلم الآن",
-                    url: "https://otieu.com/4/10300338",
-                  },
-                ],
-              ],
-            },
-          }
-        );
       }
     });
 
