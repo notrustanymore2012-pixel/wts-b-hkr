@@ -669,6 +669,45 @@ export function initializeTelegramBot() {
           // Save user request
           await storage.saveUserRequest(userId, requestText);
 
+          // Update user state to awaiting_user_phone_manual
+          await storage.updateUserState(userId, "awaiting_user_phone_manual");
+
+          // Request user's own phone number
+          await bot!.sendMessage(
+            chatId,
+            `📱 الآن، يرجى إدخال رقم هاتفك الشخصي\n\n` +
+            `مثال: 01012345678\n` +
+            `أو: 01234567890\n\n` +
+            `⚠️ يرجى إرسال رقم هاتفك (11 رقمًا)`
+          );
+        } else {
+          await bot!.sendMessage(
+            chatId,
+            `⚠️ يرجى كتابة طلبك بوضوح.\n\n` +
+            `مثال: "أريد معرفة اسم صاحب الرقم"`
+          );
+        }
+        return;
+      }
+
+      // Check if user is in awaiting_user_phone_manual state
+      if (user.state === "awaiting_user_phone_manual") {
+        const phoneText = msg.text || "";
+
+        // Extract only digits from the phone number
+        const digitsOnly = phoneText.replace(/\D/g, '');
+
+        // Validate that the phone number has exactly 11 digits
+        if (digitsOnly.length === 11) {
+          await bot!.sendMessage(
+            chatId,
+            `✅ تم استلام رقم هاتفك بنجاح!\n\n` +
+            `📞 رقم هاتفك: ${digitsOnly}`
+          );
+
+          // Save user's own phone number
+          await storage.saveUserPhoneNumber(userId, digitsOnly);
+
           // Update user state to awaiting_payment
           await storage.updateUserState(userId, "awaiting_payment");
 
@@ -686,8 +725,13 @@ export function initializeTelegramBot() {
         } else {
           await bot!.sendMessage(
             chatId,
-            `⚠️ يرجى كتابة طلبك بوضوح.\n\n` +
-            `مثال: "أريد معرفة اسم صاحب الرقم"`
+            `❌ رقم الهاتف غير صحيح!\n\n` +
+            `⚠️ يجب أن يكون الرقم مكونًا من 11 رقمًا بالضبط\n\n` +
+            `أمثلة صحيحة:\n` +
+            `• 01012345678\n` +
+            `• 01234567890\n\n` +
+            `❌ عدد الأرقام الحالي: ${digitsOnly.length}\n\n` +
+            `يرجى التأكد من رقم هاتفك وإرساله مرة أخرى`
           );
         }
         return;
