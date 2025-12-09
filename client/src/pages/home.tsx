@@ -68,58 +68,51 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                <motion.div
+                  animate={{ opacity: agreed ? 1 : 0.5 }}
+                >
+                  <Button 
+                    variant={agreed ? "default" : "outline"}
+                    className={`w-full h-14 text-lg justify-between px-6 transition-all duration-300 mb-3 ${agreed ? "bg-green-600 hover:bg-green-700 border-transparent" : "hover:bg-secondary/80"}`}
+                    onClick={() => setAgreed(!agreed)}
+                    data-testid="button-agree-terms"
                   >
-                    <Button 
-                      variant={agreed ? "default" : "outline"}
-                      className={`w-full h-14 text-lg justify-between px-6 transition-all duration-300 ${agreed ? "bg-green-600 hover:bg-green-700 border-transparent" : "hover:bg-secondary/80"}`}
-                      onClick={() => setAgreed(!agreed)}
-                      data-testid="button-agree-terms"
-                    >
-                      <div className="flex items-center gap-3">
-                        <AnimatePresence mode="wait">
-                          {agreed ? (
-                            <motion.div
-                              key="check"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              exit={{ scale: 0 }}
-                            >
-                              <CheckCircle2 className="w-6 h-6" />
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              key="shield"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              exit={{ scale: 0 }}
-                            >
-                              <ShieldCheck className="w-6 h-6 text-muted-foreground" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        <span>اوافق علي شروط سياسه الاستخدام</span>
-                      </div>
-                    </Button>
-                  </motion.div>
+                    <div className="flex items-center gap-3">
+                      <AnimatePresence mode="wait">
+                        {agreed ? (
+                          <motion.div
+                            key="check"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                          >
+                            <CheckCircle2 className="w-6 h-6" />
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="shield"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                          >
+                            <ShieldCheck className="w-6 h-6 text-muted-foreground" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <span>اوافق علي شروط سياسه الاستخدام</span>
+                    </div>
+                  </Button>
 
-                  <motion.div
-                    animate={{ opacity: agreed ? 1 : 0.5 }}
+                  <Button 
+                    disabled={!agreed}
+                    onClick={handleStart}
+                    className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 disabled:shadow-none transition-all duration-300 group"
+                    data-testid="button-start"
                   >
-                    <Button 
-                      disabled={!agreed}
-                      onClick={handleStart}
-                      className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 disabled:shadow-none transition-all duration-300 group"
-                      data-testid="button-start"
-                    >
-                      <span className="ml-2 group-hover:-translate-x-1 transition-transform">فتح البوت في تليجرام</span>
-                      <MessageCircle className="w-5 h-5" />
-                    </Button>
-                  </motion.div>
-                </div>
+                    <span className="ml-2 group-hover:-translate-x-1 transition-transform">فتح البوت في تليجرام</span>
+                    <MessageCircle className="w-5 h-5" />
+                  </Button>
+                </motion.div>
               </CardContent>
               <CardFooter className="justify-center text-xs text-muted-foreground/50 pb-6">
                 محمي ومشفر بالكامل
