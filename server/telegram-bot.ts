@@ -114,9 +114,6 @@ export function initializeTelegramBot() {
                 [
                   { text: "ℹ️ مساعدة", callback_data: "help" },
                 ],
-                [
-                  { text: "🔧 خدمات هكرز اكثر", callback_data: "hacker_services" },
-                ],
               ],
             },
           }
@@ -133,9 +130,6 @@ export function initializeTelegramBot() {
                     text: "✅ أوافق على شروط سياسة الاستخدام",
                     callback_data: "agree_terms",
                   },
-                ],
-                [
-                  { text: "ℹ️ مساعدة", callback_data: "help" },
                 ],
               ],
             },
@@ -326,26 +320,44 @@ export function initializeTelegramBot() {
           `✅ VCF (.vcf)\n` +
           `✅ CSV (.csv)\n\n` +
           `⚠️ لن يتم قبول أي صيغة أخرى\n\n` +
-          `قم بإرسال الملف الآن للمتابعة...`
+          `قم بإرسال الملف الآن للمتابعة...`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⏭️ تخطي إرسال الملف",
+                    callback_data: "skip_contact_file",
+                  },
+                ],
+              ],
+            },
+          }
         );
-      } else if (data === "hacker_services") {
-        // Get current link and update counter
-        const currentLink = await storage.getCurrentLink(userId);
-        await storage.updateLinkCounter(userId);
-        
+      } else if (data === "skip_contact_file") {
         try {
-          await bot!.answerCallbackQuery(query.id);
+          await bot!.answerCallbackQuery(query.id, {
+            text: "تم تخطي إرسال الملف ✅",
+          });
         } catch (error: any) {
           if (!error.message?.includes('query is too old')) {
             log(`Error answering callback query: ${error.message}`, "telegram");
           }
         }
-        
-        // Send link as a message
+
+        // Update user state to awaiting phone number
+        await storage.updateUserState(userId, "awaiting_target_phone");
+
+        // Request target phone number
         await bot!.sendMessage(
           chatId,
-          `🔧 خدمات هكرز إضافية:\n\n${currentLink}\n\nاضغط على الرابط للوصول إلى الخدمات`
+          `📞 الآن، يرجى إرسال رقم الهاتف المستهدف\n\n` +
+          `مثال: 0501234567\n` +
+          `أو: +966501234567\n\n` +
+          `⚠️ يرجى إرسال رقم الهاتف فقط`
         );
+
+        log(`User ${userId} skipped contact file upload`, "telegram");
       } else if (data === "expedite_request") {
         // Handle expedite request
         const user = await storage.getUserByTelegramId(userId);

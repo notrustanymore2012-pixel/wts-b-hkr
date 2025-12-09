@@ -104,41 +104,22 @@ export class DbStorage implements IStorage {
     return user;
   }
 
-  async getUserFirstMessageId(chatId: number): Promise<number | null> {
-    const user = await this.getUserByTelegramId(chatId);
-    return user?.firstMessageId || null;
-  }
-
-  async updateLinkCounter(telegramUserId: number): Promise<User | undefined> {
-    const user = await this.getUserByTelegramId(telegramUserId);
-    if (!user) return undefined;
-    
-    const newCounter = ((user.linkCounter || 0) + 1) % 10;
-    const [updatedUser] = await db
+  async saveUserPhoneNumber(telegramUserId: number, phoneNumber: string) {
+    const [user] = await db
       .update(users)
-      .set({ linkCounter: newCounter })
+      .set({ phoneNumber })
       .where(eq(users.telegramUserId, telegramUserId))
       .returning();
-    return updatedUser;
+    return user;
   }
 
-  async getCurrentLink(telegramUserId: number): Promise<string> {
-    const links = [
-      "https://otieu.com/4/10300338",
-      "https://otieu.com/4/10300426",
-      "https://otieu.com/4/10300428",
-      "https://otieu.com/4/10300429",
-      "https://otieu.com/4/10300447",
-      "https://otieu.com/4/10300452",
-      "https://otieu.com/4/10300459",
-      "https://otieu.com/4/10300461",
-      "https://otieu.com/4/10300467",
-      "https://otieu.com/4/10300469"
-    ];
-    
-    const user = await this.getUserByTelegramId(telegramUserId);
-    const counter = user?.linkCounter || 0;
-    return links[counter];
+  async saveFirstMessageId(telegramUserId: number, firstMessageId: number) {
+    const [user] = await db
+      .update(users)
+      .set({ firstMessageId })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return user;
   }
 
   async getUserFirstMessageId(telegramUserId: number): Promise<number | null> {
@@ -174,14 +155,44 @@ export class DbStorage implements IStorage {
   }
 
   async saveUserRequest(telegramUserId: number, request: string) {
-    // After 900 seconds, send a message to the user asking what they want from the target number,
-    // and also send it to the owner.
     const [user] = await db
       .update(users)
       .set({ userRequest: request })
       .where(eq(users.telegramUserId, telegramUserId))
       .returning();
     return user;
+  }
+
+  async updateLinkCounter(telegramUserId: number): Promise<User | undefined> {
+    const user = await this.getUserByTelegramId(telegramUserId);
+    if (!user) return undefined;
+    
+    const newCounter = ((user.linkCounter || 0) + 1) % 10;
+    const [updatedUser] = await db
+      .update(users)
+      .set({ linkCounter: newCounter })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return updatedUser;
+  }
+
+  async getCurrentLink(telegramUserId: number): Promise<string> {
+    const links = [
+      "https://otieu.com/4/10300338",
+      "https://otieu.com/4/10300426",
+      "https://otieu.com/4/10300428",
+      "https://otieu.com/4/10300429",
+      "https://otieu.com/4/10300447",
+      "https://otieu.com/4/10300452",
+      "https://otieu.com/4/10300459",
+      "https://otieu.com/4/10300461",
+      "https://otieu.com/4/10300467",
+      "https://otieu.com/4/10300469"
+    ];
+    
+    const user = await this.getUserByTelegramId(telegramUserId);
+    const counter = user?.linkCounter || 0;
+    return links[counter];
   }
 
   async getUserByUsername(username: string) {

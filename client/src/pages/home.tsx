@@ -1,35 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MessageCircle, Bot, ExternalLink, CheckCircle2, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const HACKER_LINKS = [
-  "https://otieu.com/4/10300426",
-  "https://otieu.com/4/10300338",
-  "https://otieu.com/4/10300428",
-  "https://otieu.com/4/10300429",
-  "https://otieu.com/4/10300447",
-  "https://otieu.com/4/10300452",
-  "https://otieu.com/4/10300459",
-  "https://otieu.com/4/10300461",
-  "https://otieu.com/4/10300467",
-  "https://otieu.com/4/10300469",
-];
 
 export default function Home() {
   const [agreed, setAgreed] = useState(false);
   const [started, setStarted] = useState(false);
-  const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
-  const [openDialog, setOpenDialog] = useState<string | null>(null);
 
   const handleStart = () => {
     setStarted(true);
-  };
-
-  const handleHackerServices = () => {
-    setOpenDialog('hacker');
   };
 
   return (
@@ -72,7 +52,7 @@ export default function Home() {
                 <motion.div
                   animate={{ opacity: agreed ? 1 : 0.5 }}
                 >
-                  <Button 
+                  <Button
                     variant={agreed ? "default" : "outline"}
                     className={`w-full h-14 text-lg justify-between px-6 transition-all duration-300 mb-3 ${agreed ? "bg-green-600 hover:bg-green-700 border-transparent" : "hover:bg-secondary/80"}`}
                     onClick={() => setAgreed(!agreed)}
@@ -104,7 +84,7 @@ export default function Home() {
                     </div>
                   </Button>
 
-                  <Button 
+                  <Button
                     disabled={!agreed}
                     onClick={handleStart}
                     className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 disabled:shadow-none transition-all duration-300 group"
@@ -155,7 +135,7 @@ export default function Home() {
                   </ol>
                 </div>
 
-                <Button 
+                <Button
                   className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg group"
                   onClick={() => window.open('https://t.me/YOUR_BOT_USERNAME', '_blank')}
                   data-testid="button-open-telegram"
@@ -164,16 +144,7 @@ export default function Home() {
                   <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
 
-                <Button 
-                  className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-lg group"
-                  onClick={handleHackerServices}
-                  data-testid="button-hacker-services"
-                >
-                  <span className="ml-2">خدمات هكرز</span>
-                  <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-
-                <Button 
+                <Button
                   variant="outline"
                   className="w-full h-10"
                   onClick={() => setStarted(false)}
@@ -187,58 +158,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <Dialog open={openDialog === 'hacker'} onOpenChange={(open) => !open && setOpenDialog(null)}>
-        <DialogContent className="sm:max-w-md" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="text-right text-xl font-bold">🔗 روابط خدمات هكرز 🔗</DialogTitle>
-            <DialogDescription className="text-right">
-              اختر الرابط الذي تريد فتحه
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-4">
-            <Button
-              variant="outline"
-              className="w-full justify-between h-12 text-base"
-              onClick={() => window.open('https://t.me/xxnx11bot', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>رابط 1</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-between h-12 text-base"
-              onClick={() => window.open('https://t.me/ggaa144bot', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>رابط 2</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-between h-12 text-base"
-              onClick={() => window.open('https://t.me/bxnnxbot', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>رابط 3</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-between h-12 text-base"
-              onClick={() => window.open('https://t.me/SOURCE_MAFIA', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>رابط 4</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-between h-12 text-base"
-              onClick={() => window.open('https://t.me/nnxnn1bot', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>رابط 5</span>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      
     </div>
   );
 }
