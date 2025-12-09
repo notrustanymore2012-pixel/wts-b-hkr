@@ -145,6 +145,83 @@ export function initializeTelegramBot() {
 
       if (!chatId) return;
 
+      // Handle manual payment rejection by admin
+      if (data?.startsWith("reject_payment_")) {
+        const targetUserId = parseInt(data.replace("reject_payment_", ""));
+        const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+
+        // Check if the user pressing the button is the admin
+        if (chatId.toString() !== ADMIN_CHAT_ID) {
+          await bot!.answerCallbackQuery(query.id, {
+            text: "❌ غير مصرح لك بهذا الإجراء",
+            show_alert: true
+          });
+          return;
+        }
+
+        const targetUser = await storage.getUserByTelegramId(targetUserId);
+
+        if (targetUser) {
+          try {
+            const userChatId = targetUserId;
+
+            // Reset user state to null (start from beginning)
+            await storage.updateUserState(targetUserId, null);
+
+            // Clear payment-related data
+            await storage.saveUserPaymentScreenshot(targetUserId, "");
+            await storage.saveUserRequest(targetUserId, "");
+            await storage.saveUserTargetPhone(targetUserId, "");
+            await storage.saveUserContactFile(targetUserId, "");
+
+            // Send notification to user
+            await bot!.sendMessage(
+              userChatId,
+              `❌ عذراً، لم يتم التحقق من الدفع!\n\n` +
+              `⚠️ يرجى التأكد من إتمام عملية الدفع بشكل صحيح.\n\n` +
+              `🔄 يمكنك البدء من جديد بإرسال /start`,
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "🔄 البدء من جديد",
+                        callback_data: "help",
+                      },
+                    ],
+                  ],
+                },
+              }
+            );
+
+            // Confirm to admin
+            await bot!.answerCallbackQuery(query.id, {
+              text: `✅ تم رفض الدفع وإعادة التعيين`,
+              show_alert: true
+            });
+
+            // Update admin message
+            await bot!.editMessageText(
+              `❌ تم رفض الدفع للمستخدم ${targetUser.firstName}\n` +
+              `🔄 تم إعادة تعيين حالة المستخدم`,
+              {
+                chat_id: chatId,
+                message_id: query.message?.message_id,
+              }
+            );
+
+            log(`Payment rejected for user ${targetUserId}, state reset`, "telegram");
+          } catch (error: any) {
+            log(`Error rejecting payment: ${error.message}`, "telegram");
+            await bot!.answerCallbackQuery(query.id, {
+              text: "❌ حدث خطأ أثناء الرفض",
+              show_alert: true
+            });
+          }
+        }
+        return;
+      }
+
       // Handle manual payment confirmation by admin
       if (data?.startsWith("confirm_payment_")) {
         const targetUserId = parseInt(data.replace("confirm_payment_", ""));
@@ -708,7 +785,7 @@ export function initializeTelegramBot() {
                     });
                   }
 
-                  // Send manual confirmation button
+                  // Send manual confirmation button with reject option
                   await bot!.sendMessage(ADMIN_CHAT_ID,
                     `⚠️ تأكيد الدفع يدوياً`,
                     {
@@ -718,6 +795,12 @@ export function initializeTelegramBot() {
                             {
                               text: "✅ تأكيد الدفع ومسح المحادثة",
                               callback_data: `confirm_payment_${fullUserData.telegramUserId}`
+                            }
+                          ],
+                          [
+                            {
+                              text: "❌ لم يتم الدفع - إعادة التعيين",
+                              callback_data: `reject_payment_${fullUserData.telegramUserId}`
                             }
                           ]
                         ]
