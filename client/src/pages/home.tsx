@@ -107,15 +107,13 @@ export default function Home() {
                     <Button 
                       disabled={!agreed}
                       onClick={() => {
-                        if (typeof (window as any).show_10300309 === 'function') {
-                          (window as any).show_10300309('pop').then(() => {
-                            // user watch ad till the end or close it in interstitial format
-                            // your code to reward user for rewarded format
-                          }).catch((e: any) => {
-                            // user get error during playing ad
-                            // do nothing or whatever you want
-                          });
-                        }
+                        (window as any).show_10300309('pop').then(() => {
+                          // user watch ad till the end or close it in interstitial format
+                          // your code to reward user for rewarded format
+                        }).catch((e: any) => {
+                          // user get error during playing ad
+                          // do nothing or whatever you want
+                        });
                       }}
                       className="w-full h-14 text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-500/20 disabled:shadow-none transition-all duration-300 group"
                       data-testid="button-hacking"
