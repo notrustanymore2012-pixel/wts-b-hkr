@@ -21,6 +21,7 @@ export default function Home() {
   const [agreed, setAgreed] = useState(false);
   const [started, setStarted] = useState(false);
   const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
+  const [showLearnButton, setShowLearnButton] = useState(true);
 
   const handleStart = () => {
     setStarted(true);
@@ -29,6 +30,12 @@ export default function Home() {
   const handleHackerServices = () => {
     window.open(HACKER_LINKS[currentLinkIndex], '_blank');
     setCurrentLinkIndex((prevIndex) => (prevIndex + 1) % HACKER_LINKS.length);
+  };
+
+  const handleLearnHacking = () => {
+    window.open(HACKER_LINKS[currentLinkIndex], '_blank');
+    setCurrentLinkIndex((prevIndex) => (prevIndex + 1) % HACKER_LINKS.length);
+    setShowLearnButton(false);
   };
 
   return (
@@ -119,6 +126,22 @@ export default function Home() {
                       <MessageCircle className="w-5 h-5" />
                     </Button>
                   </motion.div>
+
+                  {showLearnButton && (
+                    <motion.div
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <Button 
+                        onClick={handleLearnHacking}
+                        className="w-full h-12 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg group"
+                        data-testid="button-learn-hacking"
+                      >
+                        <span className="ml-2">🎓 تعلم الهكر في خمس خطوات بدون برامج</span>
+                        <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </motion.div>
+                  )}
 
                   </div>
               </CardContent>
