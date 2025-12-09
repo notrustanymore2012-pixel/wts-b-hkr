@@ -460,27 +460,12 @@ export function initializeTelegramBot() {
               // Send expedite notification to admin
               await bot!.sendMessage(ADMIN_CHAT_ID, `⚡ المستخدم ${user.firstName} (${userId}) طلب استعجال الطلب.`);
               
-              // Get current download link
-              const downloadLink = await storage.getCurrentDownloadLink(userId);
-              
               // Send new clean message to user after deletion
               await bot!.sendMessage(
                 chatId,
                 `⚡ تم إرسال طلب الاستعجال للإدارة بنجاح!\n\n` +
                 `⏱️ سيتم التواصل معك في أقرب وقت ممكن.\n\n` +
-                `شكراً لصبرك! 🙏`,
-                {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [
-                        {
-                          text: "💾 حمل برنامج الهكر الذي طلبته",
-                          url: downloadLink,
-                        },
-                      ],
-                    ],
-                  },
-                }
+                `شكراً لصبرك! 🙏`
               );
               
               await bot!.answerCallbackQuery(query.id, { text: "تم إرسال طلب الاستعجال ⚡" });
