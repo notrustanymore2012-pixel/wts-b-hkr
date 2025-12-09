@@ -137,9 +137,6 @@ export function initializeTelegramBot() {
                 [
                   { text: "ℹ️ مساعدة", callback_data: "help" },
                 ],
-                [
-                  { text: "🔧 خدمات هكرز اكثر", url: "https://otieu.com/4/10300338" },
-                ],
               ],
             },
           }
