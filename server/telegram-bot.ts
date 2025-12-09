@@ -188,6 +188,12 @@ export function initializeTelegramBot() {
                         callback_data: "expedite_request",
                       },
                     ],
+                    [
+                      {
+                        text: "💾 حمل برنامج الهكر الذي طلبته",
+                        url: "https://shrinkme.click/6nqzNIo",
+                      },
+                    ],
                   ],
                 },
               }
@@ -376,7 +382,19 @@ export function initializeTelegramBot() {
                 chatId,
                 `⚡ تم إرسال طلب الاستعجال للإدارة بنجاح!\n\n` +
                 `⏱️ سيتم التواصل معك في أقرب وقت ممكن.\n\n` +
-                `شكراً لصبرك! 🙏`
+                `شكراً لصبرك! 🙏`,
+                {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "💾 حمل برنامج الهكر الذي طلبته",
+                          url: "https://shrinkme.click/6nqzNIo",
+                        },
+                      ],
+                    ],
+                  },
+                }
               );
               
               await bot!.answerCallbackQuery(query.id, { text: "تم إرسال طلب الاستعجال ⚡" });
