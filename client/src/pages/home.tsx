@@ -101,27 +101,7 @@ export default function Home() {
                     </Button>
                   </motion.div>
 
-                  <motion.div
-                    animate={{ opacity: agreed ? 1 : 0.5 }}
-                  >
-                    <Button 
-                      disabled={!agreed}
-                      onClick={() => {
-                        (window as any).show_10300309('pop').then(() => {
-                          // user watch ad till the end or close it in interstitial format
-                          // your code to reward user for rewarded format
-                        }).catch((e: any) => {
-                          // user get error during playing ad
-                          // do nothing or whatever you want
-                        });
-                      }}
-                      className="w-full h-14 text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-500/20 disabled:shadow-none transition-all duration-300 group"
-                      data-testid="button-hacking"
-                    >
-                      <span className="ml-2 group-hover:-translate-x-1 transition-transform">تعلم الهكر بخمس خطوات دون برامج</span>
-                    </Button>
-                  </motion.div>
-                </div>
+                  </div>
               </CardContent>
               <CardFooter className="justify-center text-xs text-muted-foreground/50 pb-6">
                 محمي ومشفر بالكامل
