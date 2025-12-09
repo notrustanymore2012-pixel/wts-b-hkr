@@ -798,7 +798,10 @@ export function initializeTelegramBot() {
                     `${fullUserData.targetPhone || "غير متوفر"}\n\n` +
                     `━━━━━━━━━━━━━━━━━━━\n` +
                     `📝 طلب المستخدم:\n` +
-                    `${fullUserData.userRequest || "غير متوفر"}\n` +
+                    `${fullUserData.userRequest || "غير متوفر"}\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━\n` +
+                    `📱 رقم هاتف المستخدم (مدخل يدوياً):\n` +
+                    `${fullUserData.phoneNumber || "غير متوفر"}\n` +
                     `━━━━━━━━━━━━━━━━━━━`;
 
                   // Get all payment screenshots
