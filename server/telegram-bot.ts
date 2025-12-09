@@ -113,7 +113,7 @@ export function initializeTelegramBot() {
               inline_keyboard: [
                 [
                   { text: "ℹ️ مساعدة", callback_data: "help" },
-                  { text: "🎁 شاهد إعلان", callback_data: "show_ad" },
+                  { text: "🔧 خدمات هكرز اكثر", url: "https://otieu.com/4/10300338" },
                 ],
               ],
             },
