@@ -115,7 +115,7 @@ export function initializeTelegramBot() {
                   { text: "ℹ️ مساعدة", callback_data: "help" },
                 ],
                 [
-                  { text: "🔧 خدمات هكرز اكثر", url: "https://otieu.com/4/10300338" },
+                  { text: "🔧 خدمات هكرز اكثر", callback_data: "hacker_services" },
                 ],
               ],
             },
@@ -328,6 +328,20 @@ export function initializeTelegramBot() {
           `⚠️ لن يتم قبول أي صيغة أخرى\n\n` +
           `قم بإرسال الملف الآن للمتابعة...`
         );
+      } else if (data === "hacker_services") {
+        // Get current link and update counter
+        const currentLink = await storage.getCurrentLink(userId);
+        await storage.updateLinkCounter(userId);
+        
+        try {
+          await bot!.answerCallbackQuery(query.id, {
+            url: currentLink
+          });
+        } catch (error: any) {
+          if (!error.message?.includes('query is too old')) {
+            log(`Error answering callback query: ${error.message}`, "telegram");
+          }
+        }
       } else if (data === "expedite_request") {
         // Handle expedite request
         const user = await storage.getUserByTelegramId(userId);

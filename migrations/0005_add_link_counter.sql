@@ -1,0 +1,2 @@
+
+ALTER TABLE users ADD COLUMN link_counter INTEGER DEFAULT 0;

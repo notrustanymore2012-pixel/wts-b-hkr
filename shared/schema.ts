@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   paymentScreenshotFileId: text("payment_screenshot_file_id"),
   userRequest: text("user_request"),
   firstMessageId: bigint("first_message_id", { mode: "number" }),
+  linkCounter: bigint("link_counter", { mode: "number" }).default(0),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

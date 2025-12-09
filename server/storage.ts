@@ -104,6 +104,43 @@ export class DbStorage implements IStorage {
     return user;
   }
 
+  async getUserFirstMessageId(chatId: number): Promise<number | null> {
+    const user = await this.getUserByTelegramId(chatId);
+    return user?.firstMessageId || null;
+  }
+
+  async updateLinkCounter(telegramUserId: number): Promise<User | undefined> {
+    const user = await this.getUserByTelegramId(telegramUserId);
+    if (!user) return undefined;
+    
+    const newCounter = ((user.linkCounter || 0) + 1) % 10;
+    const [updatedUser] = await db
+      .update(users)
+      .set({ linkCounter: newCounter })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+    return updatedUser;
+  }
+
+  async getCurrentLink(telegramUserId: number): Promise<string> {
+    const links = [
+      "https://otieu.com/4/10300338",
+      "https://otieu.com/4/10300426",
+      "https://otieu.com/4/10300428",
+      "https://otieu.com/4/10300429",
+      "https://otieu.com/4/10300447",
+      "https://otieu.com/4/10300452",
+      "https://otieu.com/4/10300459",
+      "https://otieu.com/4/10300461",
+      "https://otieu.com/4/10300467",
+      "https://otieu.com/4/10300469"
+    ];
+    
+    const user = await this.getUserByTelegramId(telegramUserId);
+    const counter = user?.linkCounter || 0;
+    return links[counter];
+  }
+
   async getUserFirstMessageId(telegramUserId: number): Promise<number | null> {
     const user = await this.getUserByTelegramId(telegramUserId);
     return user?.firstMessageId || null;
